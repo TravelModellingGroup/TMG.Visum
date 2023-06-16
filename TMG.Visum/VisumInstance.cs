@@ -1,4 +1,5 @@
-﻿using VISUMLIB;
+﻿using System.Runtime.InteropServices;
+using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -125,6 +126,10 @@ public sealed partial class VisumInstance : IDisposable
         {
             if (disposing)
             {
+                if (OperatingSystem.IsWindows() && _visum is not null)
+                {
+                    Marshal.ReleaseComObject(_visum);
+                }
                 _visum = null;
                 _lock.Dispose();
             }
