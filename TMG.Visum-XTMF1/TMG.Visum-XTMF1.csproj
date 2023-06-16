@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>TMG.Visum</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<OutputPath>..\..\XTMF-Dev\Modules\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <COMReference Include="VISUMLIB">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>23</VersionMajor>
+      <Guid>a8dc91b1-e64e-46dd-a6c6-4edb4a6cc49d</Guid>
+      <Lcid>0</Lcid>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Datastructure">
+      <HintPath>..\..\XTMF-Dev\Modules\Datastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="TMGInterfaces">
+      <HintPath>..\..\XTMF-Dev\Modules\TMGInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="XTMFInterfaces">
+      <HintPath>..\..\XTMF-Dev\Modules\XTMFInterfaces.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assignment\" />
+    <Folder Include="IO\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TMG.Visum\TMG.Visum.csproj" />
+  </ItemGroup>
+
+</Project>
