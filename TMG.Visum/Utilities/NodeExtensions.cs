@@ -6,7 +6,7 @@ namespace TMG.Visum.Utilities;
 /// <summary>
 /// This class provides the 
 /// </summary>
-internal static class NodeExtensions
+public static class NodeExtensions
 {
 
     /// <summary>

@@ -1,7 +1,7 @@
 namespace TMG.Visum.Test
 {
     [TestClass]
-    public class LoadingVisumInstance
+    public class TestLoadingVisumInstance
     {
         [TestMethod]
         public void LoadVisumWithoutVersionFile()
