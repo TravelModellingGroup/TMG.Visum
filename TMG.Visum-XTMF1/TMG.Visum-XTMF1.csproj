@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Assignment\**" />
+    <EmbeddedResource Remove="Assignment\**" />
+    <None Remove="Assignment\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="VISUMLIB">
       <WrapperTool>tlbimp</WrapperTool>
       <VersionMinor>0</VersionMinor>
@@ -30,10 +36,6 @@
     <Reference Include="XTMFInterfaces">
       <HintPath>..\..\XTMF-Dev\Modules\XTMFInterfaces.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assignment\" />
   </ItemGroup>
 
   <ItemGroup>

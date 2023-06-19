@@ -1,7 +1,7 @@
-﻿namespace TMG.Visum.IO;
+﻿namespace TMG.Visum.Import;
 
 [ModuleInformation(Description = "Store the given matrix into a Visum Instance.")]
-public sealed class SaveMatrixToVisum : ISelfContainedModule
+public sealed class ImportMatrixToVisum : ISelfContainedModule
 {
     [RunParameter("Matrix Number", 0, "The matrix number to store into.")]
     public int MatrixNumber;
@@ -17,7 +17,7 @@ public sealed class SaveMatrixToVisum : ISelfContainedModule
 
     public void Start()
     {
-        var instance = GetInstance();
+        var instance = Visum.LoadInstance();
         try
         {
             if (!instance.TryGetMatrix(MatrixNumber, out var matrix))
@@ -30,7 +30,7 @@ public sealed class SaveMatrixToVisum : ISelfContainedModule
             }
             matrix.SetValues(GetMatrix());
         }
-        catch(VisumException ex)
+        catch (VisumException ex)
         {
             throw new XTMFRuntimeException(this, ex);
         }
@@ -39,25 +39,16 @@ public sealed class SaveMatrixToVisum : ISelfContainedModule
     private float[][] GetMatrix()
     {
         var loaded = ToSave.Loaded;
-        if(!loaded)
+        if (!loaded)
         {
             ToSave.LoadData();
         }
         var ret = ToSave.GiveData();
-        if(!loaded)
+        if (!loaded)
         {
             ToSave.UnloadData();
         }
         return ret!.GetFlatData();
-    }
-
-    private VisumInstance GetInstance()
-    {
-        if (!Visum.Loaded)
-        {
-            Visum.LoadData();
-        }
-        return Visum.GiveData()!;
     }
 
     public bool RuntimeValidation(ref string? error)

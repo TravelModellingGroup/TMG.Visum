@@ -1,4 +1,4 @@
-﻿namespace TMG.Visum.IO;
+﻿namespace TMG.Visum.Load;
 
 [ModuleInformation(Description = "Loads the given matix number from the visum instance.")]
 public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
@@ -13,7 +13,7 @@ public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
 
     public void LoadData()
     {
-        var instance = GetInstance();
+        var instance = Visum.LoadInstance();
         try
         {
             if (!instance.TryGetMatrix(MatrixNumber, out var matrix))
@@ -24,19 +24,10 @@ public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
             var zones = matrix.GetSparseIndexes();
             _data = SparseTwinIndex<float>.CreateSquareTwinIndex(zones, matrixData);
         }
-        catch(VisumException ex)
+        catch (VisumException ex)
         {
             throw new XTMFRuntimeException(this, ex);
         }
-    }
-
-    private VisumInstance GetInstance()
-    {
-        if (!Visum.Loaded)
-        {
-            Visum.LoadData();
-        }
-        return Visum.GiveData()!;
     }
 
     public SparseTwinIndex<float>? GiveData()
