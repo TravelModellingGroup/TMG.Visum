@@ -13,17 +13,24 @@ public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
 
     public void LoadData()
     {
-        var instance = GetIntance();
-        if(!instance.TryGetMatrix(MatrixNumber, out var matrix))
+        var instance = GetInstance();
+        try
         {
-            throw new XTMFRuntimeException(this, $"The matrix number {MatrixNumber} does not exist in the Visum instance!");
+            if (!instance.TryGetMatrix(MatrixNumber, out var matrix))
+            {
+                throw new XTMFRuntimeException(this, $"The matrix number {MatrixNumber} does not exist in the Visum instance!");
+            }
+            var matrixData = matrix.GetValuesAsFloatMatrix();
+            var zones = matrix.GetSparseIndexes();
+            _data = SparseTwinIndex<float>.CreateSquareTwinIndex(zones, matrixData);
         }
-        var matrixData = matrix.GetValuesAsFloatMatrix();
-        var zones = matrix.GetSparseIndexes();
-        _data = SparseTwinIndex<float>.CreateSquareTwinIndex(zones, matrixData);
+        catch(VisumException ex)
+        {
+            throw new XTMFRuntimeException(this, ex);
+        }
     }
 
-    private VisumInstance GetIntance()
+    private VisumInstance GetInstance()
     {
         if (!Visum.Loaded)
         {
