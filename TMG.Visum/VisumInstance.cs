@@ -4,7 +4,7 @@ using VISUMLIB;
 namespace TMG.Visum;
 
 /// <summary>
-/// This provides the interface to access Visum
+/// This provides the interface to access a particular instance of Visum.
 /// </summary>
 public sealed partial class VisumInstance : IDisposable
 {
@@ -126,11 +126,7 @@ public sealed partial class VisumInstance : IDisposable
         {
             if (disposing)
             {
-                if (OperatingSystem.IsWindows() && _visum is not null)
-                {
-                    Marshal.ReleaseComObject(_visum);
-                }
-                _visum = null;
+                COM.ReleaseCOMObject(ref _visum);
                 _lock.Dispose();
             }
             disposedValue = true;
