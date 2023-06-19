@@ -8,9 +8,19 @@ namespace TMG.Visum;
 public sealed class VisumMatrix : IDisposable
 {
     /// <summary>
-    /// Our local copy of the Visum matrix
+    /// Our local copy of the Visum matrix.
     /// </summary>
     private IMatrix _matrix;
+
+    /// <summary>
+    /// Store what type of data this matrix represents.
+    /// </summary>
+    private readonly ObjectTypeRefT _basedOn;
+
+    /// <summary>
+    /// The instance of visum that this matrix belongs to.
+    /// </summary>
+    private readonly IVisum _instance;
 
     /// <summary>
     /// Provides a wrapper around the matrix that
@@ -22,7 +32,8 @@ public sealed class VisumMatrix : IDisposable
     internal VisumMatrix(IMatrix matrix, ObjectTypeRefT basedOn, IVisum visum)
     {
         _matrix = matrix;
-        (Rows, Columns) = GetDimensions(basedOn, visum);
+        _basedOn = basedOn;
+        _instance = visum;
     }
 
     /// <summary>
@@ -34,17 +45,18 @@ public sealed class VisumMatrix : IDisposable
     /// <exception cref="InvalidOperationException">If an unknown type of matrix is requested.</exception>
     private static (int rows, int columns) GetDimensions(ObjectTypeRefT basedOn, IVisum visum)
     {
-        return basedOn switch
+        int count = basedOn switch
         {
-            ObjectTypeRefT.OBJECTTYPEREF_ZONE => (visum.Net.Zones.Count, visum.Net.Zones.Count),
-            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => (visum.Net.MainZones.Count, visum.Net.MainZones.Count),
-            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => (visum.Net.StopAreas.Count, visum.Net.StopAreas.Count),
+            ObjectTypeRefT.OBJECTTYPEREF_ZONE => visum.Net.Zones.Count,
+            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => visum.Net.MainZones.Count,
+            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => visum.Net.StopAreas.Count,
             _ => ThrowInvalidType(basedOn)
         };
+        return (count, count);
     }
 
     [DoesNotReturn]
-    private static (int, int) ThrowInvalidType(ObjectTypeRefT basedOn)
+    private static int ThrowInvalidType(ObjectTypeRefT basedOn)
     {
         throw new InvalidOperationException($"The matrix type {Enum.GetName(typeof(ObjectTypeRefT), basedOn)} is not supported!");
     }
@@ -61,12 +73,12 @@ public sealed class VisumMatrix : IDisposable
     /// <summary>
     /// The number of rows in the matrix
     /// </summary>
-    public int Rows { get; }
+    public int Rows => GetDimensions(_basedOn, _instance).rows;
 
     /// <summary>
     /// The number of columnsin the matrix
     /// </summary>
-    public int Columns { get; }
+    public int Columns => GetDimensions(_basedOn, _instance).columns;
 
     /// <summary>
     /// Gets the total sum of the matrix
