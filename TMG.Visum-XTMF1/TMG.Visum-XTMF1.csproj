@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <Folder Include="Assignment\" />
-    <Folder Include="IO\" />
   </ItemGroup>
 
   <ItemGroup>

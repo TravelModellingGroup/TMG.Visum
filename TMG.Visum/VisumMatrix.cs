@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -50,13 +51,24 @@ public sealed class VisumMatrix : IDisposable
             ObjectTypeRefT.OBJECTTYPEREF_ZONE => visum.Net.Zones.Count,
             ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => visum.Net.MainZones.Count,
             ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => visum.Net.StopAreas.Count,
-            _ => ThrowInvalidType(basedOn)
+            _ => ThrowInvalidType<int>(basedOn)
         };
         return (count, count);
     }
 
+    public int[] GetSparseIndexes()
+    {
+        return _basedOn switch
+        {
+            ObjectTypeRefT.OBJECTTYPEREF_ZONE => _instance.Net.Zones.GetZoneNumbers(),
+            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => _instance.Net.MainZones.GetZoneNumbers(),
+            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => _instance.Net.StopAreas.GetZoneNumbers(),
+            _ => ThrowInvalidType<int[]>(_basedOn)
+        };
+    }
+
     [DoesNotReturn]
-    private static int ThrowInvalidType(ObjectTypeRefT basedOn)
+    private static T ThrowInvalidType<T>(ObjectTypeRefT basedOn)
     {
         throw new InvalidOperationException($"The matrix type {Enum.GetName(typeof(ObjectTypeRefT), basedOn)} is not supported!");
     }

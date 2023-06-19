@@ -2,6 +2,11 @@
 
 public static class MatrixExtensions
 {
+    /// <summary>
+    /// Get the name of the matrix.
+    /// </summary>
+    /// <param name="matrix"></param>
+    /// <returns>The name of the matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string GetName(this IMatrix matrix)
     {
@@ -9,12 +14,22 @@ public static class MatrixExtensions
         return name!;
     }
 
+    /// <summary>
+    /// Set the name of the matrix.
+    /// </summary>
+    /// <param name="matrix"></param>
+    /// <param name="name">The name to set it to.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetName(this IMatrix matrix, string name)
     {
         matrix.AttValue["Name"] = name;
     }
 
+    /// <summary>
+    /// Get the matrix number.
+    /// </summary>
+    /// <param name="matrix"></param>
+    /// <returns>The matrix number to look at.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetNumber(this IMatrix matrix)
     {
