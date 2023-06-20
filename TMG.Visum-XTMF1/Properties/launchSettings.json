@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "XTMF-Dev": {
+      "commandName": "Executable",
+      "executablePath": "..\\XTMF.Gui.exe"
+    }
+  }
+}

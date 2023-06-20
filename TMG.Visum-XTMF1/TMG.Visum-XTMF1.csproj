@@ -5,6 +5,8 @@
     <RootNamespace>TMG.Visum</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	<OutputPath>..\..\XTMF-Dev\Modules\</OutputPath>
   </PropertyGroup>
 
