@@ -18,9 +18,10 @@ public sealed class ImportMatrixToVisum : ISelfContainedModule
     public void Start()
     {
         var instance = Visum.LoadInstance();
+        VisumMatrix? matrix = null;
         try
         {
-            if (!instance.TryGetMatrix(MatrixNumber, out var matrix))
+            if (!instance.TryGetMatrix(MatrixNumber, out matrix))
             {
                 matrix = instance.CreateDemandMatrix(MatrixNumber, MatrixName);
             }
@@ -33,6 +34,10 @@ public sealed class ImportMatrixToVisum : ISelfContainedModule
         catch (VisumException ex)
         {
             throw new XTMFRuntimeException(this, ex);
+        }
+        finally
+        {
+            matrix?.Dispose();
         }
     }
 
