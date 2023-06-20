@@ -103,7 +103,7 @@ public sealed partial class VisumInstance : IDisposable
             // there is no reason to fore them to loading it from disk previously.
             try
             {
-                _visum.SaveVersion(filePath);
+                _visum.SaveVersion(Path.GetFullPath(filePath));
             }
             catch (Exception ex)
             {
