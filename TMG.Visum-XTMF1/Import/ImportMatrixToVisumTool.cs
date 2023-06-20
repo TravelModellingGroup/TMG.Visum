@@ -14,9 +14,10 @@ public sealed class ImportMatrixToVisumTool : IVisumTool
 
     public void Execute(VisumInstance instance)
     {
+        VisumMatrix? matrix = null;
         try
         {
-            if (!instance.TryGetMatrix(MatrixNumber, out var matrix))
+            if (!instance.TryGetMatrix(MatrixNumber, out matrix))
             {
                 matrix = instance.CreateDemandMatrix(MatrixNumber, MatrixName);
             }
@@ -29,6 +30,10 @@ public sealed class ImportMatrixToVisumTool : IVisumTool
         catch (VisumException ex)
         {
             throw new XTMFRuntimeException(this, ex);
+        }
+        finally
+        {
+            matrix?.Dispose();
         }
     }
 
