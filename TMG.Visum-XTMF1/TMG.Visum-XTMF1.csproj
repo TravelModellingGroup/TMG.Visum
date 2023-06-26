@@ -17,18 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <COMReference Include="VISUMLIB">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>23</VersionMajor>
-      <Guid>a8dc91b1-e64e-46dd-a6c6-4edb4a6cc49d</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="Datastructure">
       <HintPath>..\..\XTMF-Dev\Modules\Datastructure.dll</HintPath>
     </Reference>
