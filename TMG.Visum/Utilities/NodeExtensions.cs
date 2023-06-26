@@ -14,7 +14,7 @@ public static class NodeExtensions
     /// </summary>
     /// <param name="us">The node to look at.</param>
     /// <returns>The node number.</returns>
-    public static double NodeNumber(this INode us) => us.AttValue["No"];
+    public static double NodeNumber(this INode us) => (double)us.AttValue["No"];
 
     /// <summary>
     /// Get the X coordinate for the node
@@ -45,6 +45,6 @@ public static class NodeExtensions
     public static List<IAttribute> GetAttributes(this INodes us)
     {
         IAttributes attributes = us.Attributes;
-        return attributes.GetAll.ToList();
+        return ((IEnumerable<IAttribute>)attributes.GetAll).ToList();
     }
 }

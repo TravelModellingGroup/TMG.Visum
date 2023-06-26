@@ -33,7 +33,10 @@ public static class MatrixExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetNumber(this IMatrix matrix)
     {
-        return (int)matrix.AttValue["No"];
+        // The attribute is stored as a double
+        // However Visum uses it as an int, so we need to
+        // cast twice.
+        return (int)((double)matrix.AttValue["No"]);
     }
 
     /// <summary>
