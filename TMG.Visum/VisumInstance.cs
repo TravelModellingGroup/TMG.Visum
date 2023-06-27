@@ -39,6 +39,11 @@ public sealed partial class VisumInstance : IDisposable
     }
 
     /// <summary>
+    /// Internal only, get the real Visum instance.
+    /// </summary>
+    internal IVisum? Visum => _visum;
+
+    /// <summary>
     /// Initializes a new instead of VISUM and immediately loads the given version file.
     /// </summary>
     /// <param name="caller">The module that wants to create this new instance.</param>

@@ -160,5 +160,4 @@ public partial class VisumInstance : IDisposable
             _lock.ExitWriteLock();
         }
     }
-
 }

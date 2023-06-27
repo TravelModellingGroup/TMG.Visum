@@ -38,6 +38,11 @@ public sealed class VisumMatrix : IDisposable
     }
 
     /// <summary>
+    /// Internal only, get access to the underlying matrix.
+    /// </summary>
+    internal IMatrix Matrix => _matrix;
+
+    /// <summary>
     /// Get the dimensions of from the given reference type.
     /// </summary>
     /// <param name="basedOn">The type of matrix to create.</param>
