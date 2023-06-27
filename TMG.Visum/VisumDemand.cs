@@ -10,12 +10,12 @@ public sealed class VisumDemandSegment : IDisposable
     /// <summary>
     /// The demand segment that we wrap.
     /// </summary>
-    public IDemandSegment _segment;
+    private IDemandSegment _segment;
 
     /// <summary>
     /// The instance of Visum that the segment belongs to.
     /// </summary>
-    public VisumInstance _instance;
+    private VisumInstance _instance;
 
     /// <summary>
     /// Setup a wrapper around a demand segment
@@ -26,6 +26,28 @@ public sealed class VisumDemandSegment : IDisposable
     {
         _segment = segment;
         _instance = instance;
+    }
+
+    /// <summary>
+    /// Internal Only, a reference to the wraped demand segment.
+    /// </summary>
+    internal IDemandSegment Segment => _segment;
+
+    /// <summary>
+    /// The unique code for the demand segment
+    /// </summary>
+    public string Code
+    {
+        get => _segment.GetCode();
+    }
+
+    /// <summary>
+    /// Get and Set the Human readable name of the demand segment
+    /// </summary>
+    public string Name
+    {
+        get => _segment.GetName();
+        set => _segment.SetName(value);
     }
 
     /// <summary>
