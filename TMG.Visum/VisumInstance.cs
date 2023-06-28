@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Xml;
 using VISUMLIB;
 
 namespace TMG.Visum;
@@ -119,6 +120,34 @@ public sealed partial class VisumInstance : IDisposable
         {
             _lock.ExitReadLock();
         }
+    }
+
+    /// <summary>
+    /// Call this to start generating a file that will be
+    /// used for executing a procedute.
+    /// </summary>
+    /// <param name="writeBody">The function that will write the operation tag</param>
+    private static string WriteProcedure(Action<XmlWriter> writeBody)
+    {
+        var fileName = Path.GetTempFileName();
+        try
+        {
+            using var writer = XmlWriter.Create(fileName);
+            writer.WriteStartDocument();
+            writer.WriteStartElement("PROCEDURES");
+            writer.WriteElementString("VERSION", "2301");
+            writer.WriteStartElement("OPERATIONS");
+            writeBody(writer);
+            writer.WriteEndElement();
+            writer.WriteEndElement();
+            writer.WriteEndDocument();
+        }
+        catch
+        {
+            Files.SafeDelete(fileName);
+            throw;
+        }
+        return fileName;
     }
 
     #region IDispose

@@ -16,5 +16,32 @@ public partial class VisumInstance
         {
             _lock.ExitWriteLock();
         }
-    }   
+    }
+
+    public VisumDemandSegment GetDemandSegment(string code)
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            ObjectDisposedException.ThrowIf(_visum is null, this);
+            IDemandSegment? ret = null;
+            foreach(IDemandSegment segment in _visum.Net.DemandSegments)
+            {
+                if(segment.GetCode() == code)
+                {
+                    ret = segment;
+                    break;
+                }
+            }
+            if(ret is null)
+            {
+                throw new VisumException($"There is no demand segment with the code {code}!");
+            }
+            return new VisumDemandSegment(ret, this);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
 }
