@@ -11,7 +11,7 @@ public partial class VisumInstance : IDisposable
     /// <param name="matrixName">The name to give the matrix.</param>
     /// <returns>The newly created matrix.</returns>
     /// <exception cref="VisumException">
-    /// Thrown if the Visum instance has alreadby been disposed.
+    /// Thrown if the Visum instance has already been disposed.
     /// </exception>
     public VisumMatrix CreateDemandMatrix(int number, string matrixName)
     {
@@ -25,7 +25,7 @@ public partial class VisumInstance : IDisposable
     /// <param name="matrixName">The name to give the matrix.</param>
     /// <returns>The newly created matrix.</returns>
     /// <exception cref="VisumException">
-    /// Thrown if the Visum instance has alreadby been disposed.
+    /// Thrown if the Visum instance has already been disposed.
     /// </exception>
     public VisumMatrix CreateSkimMatrix(int number, string matrixName)
     {
@@ -114,7 +114,7 @@ public partial class VisumInstance : IDisposable
     /// <param name="number"></param>
     /// <returns></returns>
     /// <exception cref="VisumException">
-    /// Thrown if the Visum instance has alreadby been disposed or
+    /// Thrown if the Visum instance has already been disposed or
     /// if the matrix does not exist.
     /// </exception>
     public VisumMatrix GetMatrix(int number)
@@ -140,7 +140,7 @@ public partial class VisumInstance : IDisposable
     /// </summary>
     /// <param name="number">The matrix number to delete.</param>
     /// <exception cref="VisumException">
-    /// Thrown if the Visum instance has alreadby been disposed.
+    /// Thrown if the Visum instance has already been disposed.
     /// </exception>
     public bool DeleteMatrix(int number)
     {
