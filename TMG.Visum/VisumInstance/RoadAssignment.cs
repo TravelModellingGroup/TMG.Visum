@@ -73,6 +73,4 @@ public partial class VisumInstance
         }
     }
 
-    
-
 }
