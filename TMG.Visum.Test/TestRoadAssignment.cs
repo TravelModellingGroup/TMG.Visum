@@ -101,4 +101,5 @@ public class TestRoadAssignment
             new RoadAssignment.StabilityCriteria(),
             new LUCEAssignment());
     }
+
 }
