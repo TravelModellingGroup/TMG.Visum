@@ -1,16 +1,23 @@
-﻿using System.Xml;
+﻿using System.Globalization;
+using System.Xml;
+using TMG.Visum.RoadAssignment;
 
 namespace TMG.Visum;
 
 public partial class VisumInstance
 {
-    public void ExecuteRoadAssignment(VisumDemandSegment segment)
+    public void ExecuteRoadAssignment(VisumDemandSegment segment, StabilityCriteria criteria,
+        RoadAssignmentAlgorithm algorithm)
     {
-        ExecuteRoadAssignment(new List<VisumDemandSegment>(1) { segment });
+        ExecuteRoadAssignment(new List<VisumDemandSegment>(1) { segment }, criteria, algorithm);
     }
 
-    public void ExecuteRoadAssignment(IEnumerable<VisumDemandSegment> demandSegments)
+    public void ExecuteRoadAssignment(IEnumerable<VisumDemandSegment> demandSegments,
+        StabilityCriteria criteria,
+        RoadAssignmentAlgorithm algorithm)
     {
+        CheckRoadAssignmentParameters(demandSegments, criteria);
+
         _lock.EnterWriteLock();
         string? tempFileName = null;
         try
@@ -26,30 +33,8 @@ public partial class VisumInstance
 
                 writer.WriteStartElement("PRTASSIGNMENTPARA");
                 writer.WriteAttributeString("DSEGSET", string.Join(',', demandSegments.Select(seg => seg.Code)));
-                writer.WriteAttributeString("PRTASSIGNMENTVARIANT", "Equilibrium");
-
-                writer.WriteStartElement("EQUILIBRIUMPARA");
-                writer.WriteAttributeString("MAXITERATIONS", "100");
-                writer.WriteAttributeString("USECURRENTSOLUTION", "0");
-                writer.WriteAttributeString("USEEXTENDEDSTABILITYCRITERIA", "0");
-
-                writer.WriteStartElement("EXTENDEDSTABILITYCRITERIAPARA");
-                writer.WriteAttributeString("FRACTIONMAXRELDIFFLINKIMP", "0.98");
-                writer.WriteAttributeString("FRACTIONMAXRELDIFFLINKVOL", "0.98");
-                writer.WriteAttributeString("FRACTIONMAXRELDIFFTURNIMP", "0.98");
-                writer.WriteAttributeString("FRACTIONMAXRELDIFFTURNVOL", "0.98");
-                writer.WriteAttributeString("IGNOREVOLUMESMALLERTHAN", "0");
-                writer.WriteAttributeString("MAXGAP", "0.0001");
-                writer.WriteAttributeString("MAXRELDIFFLINKIMP", "0.01");
-                writer.WriteAttributeString("MAXRELDIFFLINKVOL", "0.01");
-                writer.WriteAttributeString("MAXRELDIFFTURNIMP", "0.01");
-                writer.WriteAttributeString("MAXRELDIFFTURNVOL", "0.01");
-                writer.WriteAttributeString("NUMCHECKEDSUBSEQUENTITERATIONS", "4");
-                writer.WriteAttributeString("ONLYACTIVENETOBJECTS", "0");
-                writer.WriteEndElement();
-
-                // end EQUILIBRIUMPARA
-                writer.WriteEndElement();
+                writer.WriteAttributeString("PRTASSIGNMENTVARIANT", algorithm.VariantName);
+                algorithm.WriteParameters(writer, criteria);
                 // end PRTASSIGNMENTPARA
                 writer.WriteEndElement();
                 // end OPERATION
@@ -58,15 +43,34 @@ public partial class VisumInstance
             // Wipe out the previous procedures and run this.
             _visum.Procedures.OpenXml(tempFileName, false);
             _visum.Procedures.Execute();
+            // Now double check that there were no errors.
+
+        }
+        catch (VisumException)
+        {
+            // Just pass through VisumExceptions
+            throw;
         }
         catch (Exception ex)
         {
             throw new VisumException(ex);
         }
-        finally 
+        finally
         {
-            Files.SafeDelete(tempFileName);   
-            _lock.ExitWriteLock(); 
+            Files.SafeDelete(tempFileName);
+            _lock.ExitWriteLock();
         }
     }
+
+    private static void CheckRoadAssignmentParameters(IEnumerable<VisumDemandSegment> demandSegments,
+        StabilityCriteria criteria)
+    {
+        // Before starting check if there are any parameters that don't make sense.
+        criteria.CheckParameters();
+        if (!demandSegments.Any())
+        {
+            throw new VisumException("There were no demand segments defined!");
+        }
+    }
+
 }

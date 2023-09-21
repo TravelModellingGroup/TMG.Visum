@@ -80,6 +80,7 @@ public sealed class VisumDemandSegment : IDisposable
             {
                 COM.ReleaseCOMObject(ref _segment!, false);
             }
+            _instance = null!;
             disposedValue = true;
         }
     }
