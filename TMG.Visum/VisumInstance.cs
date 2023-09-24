@@ -124,7 +124,7 @@ public sealed partial class VisumInstance : IDisposable
 
     /// <summary>
     /// Call this to start generating a file that will be
-    /// used for executing a procedute.
+    /// used for executing a procedure.
     /// </summary>
     /// <param name="writeBody">The function that will write the operation tag</param>
     private static string WriteProcedure(Action<XmlWriter> writeBody)
