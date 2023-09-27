@@ -5,9 +5,9 @@ VisualStudioVersion = 17.7.33711.374
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMG.Visum-XTMF1", "TMG.Visum-XTMF1\TMG.Visum-XTMF1.csproj", "{EA0AB83C-2059-4E7A-A828-1D6413EAD15C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMG.Visum", "TMG.Visum\TMG.Visum.csproj", "{A114CE92-43FA-45E2-9E80-363B32D140A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMG.Visum", "TMG.Visum\TMG.Visum.csproj", "{A114CE92-43FA-45E2-9E80-363B32D140A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMG.Visum.Test", "TMG.Visum.Test\TMG.Visum.Test.csproj", "{84F0F281-768E-479C-99D7-463EF809A9DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMG.Visum.Test", "TMG.Visum.Test\TMG.Visum.Test.csproj", "{84F0F281-768E-479C-99D7-463EF809A9DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

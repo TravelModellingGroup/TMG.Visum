@@ -6,7 +6,7 @@ public sealed class ImportMatrixToVisum : ISelfContainedModule
     [RunParameter("Matrix Number", 0, "The matrix number to store into.")]
     public int MatrixNumber;
 
-    [RunParameter("Matrix Name", "", "The name to assosiate with the matrix.")]
+    [RunParameter("Matrix Name", "", "The name to associate with the matrix.")]
     public string MatrixName = string.Empty;
 
     [SubModelInformation(Required = true, Description = "The matrix to Store into Visum")]

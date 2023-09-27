@@ -1,6 +1,6 @@
 ﻿namespace TMG.Visum.Load;
 
-[ModuleInformation(Description = "Loads the given matix number from the visum instance.")]
+[ModuleInformation(Description = "Loads the given matrix number from the Visum instance.")]
 public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
 {
     [RunParameter("Matrix Number", 0, "The number of the matrix to load.")]

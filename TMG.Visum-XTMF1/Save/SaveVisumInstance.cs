@@ -1,4 +1,6 @@
-﻿namespace TMG.Visum.Save;
+﻿// Ignore Spelling: Visum
+
+namespace TMG.Visum.Save;
 
 [ModuleInformation(Description = "Save the current Visum instance to a file.")]
 public sealed class SaveVisumInstance : ISelfContainedModule
