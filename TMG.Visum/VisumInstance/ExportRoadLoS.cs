@@ -62,7 +62,7 @@ public partial class VisumInstance
 
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXml(tempFileName, false);
+            _visum.Procedures.OpenXmlWithOptions(tempFileName);
             _visum.Procedures.Execute();
             return GetMatrixByNameInner(type.GetMatrixName(demandSegment));
         }
