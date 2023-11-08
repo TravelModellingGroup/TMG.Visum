@@ -6,10 +6,10 @@ public partial class VisumInstance
 {
 
     /// <summary>
-    /// 
+    /// Calculate a Road LoS attribute and generate a matrix.
     /// </summary>
-    /// <param name="demandSegment"></param>
-    /// <exception cref="VisumException"></exception>
+    /// <param name="demandSegment">The demand segment to process.</param>
+    /// <exception cref="VisumException">Can throw an exception if VISUM has an issue when processing the command.</exception>
     public VisumMatrix CalculateRoadLoS(VisumDemandSegment demandSegment, PrTLosTypes type)
     {
         string? tempFileName = null;

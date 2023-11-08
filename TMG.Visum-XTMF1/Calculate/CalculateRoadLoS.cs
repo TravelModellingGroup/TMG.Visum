@@ -15,13 +15,27 @@ public sealed class CalculateRoadLoS : IVisumTool
     [RunParameter("PrT Matrix Type", PrTLosTypes.TCur, "The type of matrix to compute from the previous road assignment.")]
     public PrTLosTypes Type;
 
+    [RunParameter("Matrix Code", "", "If non-blank the matrix's code will be reassigned to the specified code.")]
+    public string MatrixCode = null!;
+
+    [RunParameter("Matrix Name", "", "If non-blank the matrix will be renamed to the specified name.")]
+    public string MatrixName = null!;
+
     public void Execute(VisumInstance instance)
     {
         VisumDemandSegment? segment = null;
         try
         {
             segment = GetSegment(instance);
-            instance.CalculateRoadLoS(segment, Type);
+            using var matrix = instance.CalculateRoadLoS(segment, Type);
+            if (!string.IsNullOrWhiteSpace(MatrixCode))
+            {
+                matrix.Code = MatrixCode;
+            }
+            if (!string.IsNullOrWhiteSpace(MatrixName))
+            {
+                matrix.Name = MatrixName;
+            }
         }
         catch (VisumException e)
         {

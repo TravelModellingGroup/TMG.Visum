@@ -27,6 +27,9 @@ public abstract class RoadAssignmentAlgorithm
     internal void WriteParameters(XmlWriter writer, StabilityCriteria criteria)
     {
         InnerWriteParameters(writer, criteria);
+        WriteStabilityCriteria(writer, criteria);
+        // Close the algorithm element
+        writer.WriteEndElement();
     }
 
     /// <summary>

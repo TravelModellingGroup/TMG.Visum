@@ -88,12 +88,21 @@ public sealed class VisumMatrix : IDisposable
     }
 
     /// <summary>
+    /// The associated code for the matrix (short name)
+    /// </summary>
+    public string Code
+    {
+        get => _matrix.GetCode();
+        set => _matrix.SetCode(value);
+    }
+
+    /// <summary>
     /// The number of rows in the matrix
     /// </summary>
     public int Rows => GetDimensions(_basedOn, _instance).rows;
 
     /// <summary>
-    /// The number of columnsin the matrix
+    /// The number of columns in the matrix
     /// </summary>
     public int Columns => GetDimensions(_basedOn, _instance).columns;
 
@@ -142,15 +151,17 @@ public sealed class VisumMatrix : IDisposable
 
     private T[,] ConvertTo2DMatrix<T>(T[] flat)
     {
-        var ret = new T[Rows,Columns];
+        var rows = Rows;
+        var columns = Columns;
+        var ret = new T[rows,columns];
         if(ret.Length != flat.Length)
         {
             throw new VisumException($"The size of the arrays are not the same expected {ret.Length} but received {flat.Length}!");
         }
         int pos = 0;
-        for (int i = 0; i < Rows; i++)
+        for (int i = 0; i < rows; i++)
         {
-            for (int j = 0; j < Columns; j++)
+            for (int j = 0; j < columns; j++)
             {
                 ret[i, j] = flat[pos++];
             }
@@ -160,14 +171,16 @@ public sealed class VisumMatrix : IDisposable
 
     private T[,] ConvertTo2DMatrix<T>(T[][] flat)
     {
-        var ret = new T[Rows, Columns];
-        if (Rows != flat.Length)
+        var rows = Rows;
+        var columns = Columns;
+        var ret = new T[rows, columns];
+        if (rows != flat.Length)
         {
             throw new VisumException($"The size of the arrays are not the same expected {Rows} but received {flat.Length}!");
         }
-        for (int i = 0; i < Rows; i++)
+        for (int i = 0; i < rows; i++)
         {
-            for (int j = 0; j < Columns; j++)
+            for (int j = 0; j < columns; j++)
             {
                 ret[i, j] = flat[i][j];
             }

@@ -5,7 +5,7 @@ using VISUMLIB;
 namespace TMG.Visum;
 
 /// <summary>
-/// This provides the interface to access a particular instance of Visum.
+/// This provides the interface to access a particular instance of VISUM.
 /// </summary>
 public sealed partial class VisumInstance : IDisposable
 {
@@ -20,6 +20,12 @@ public sealed partial class VisumInstance : IDisposable
     /// load a new version file when trying to save.
     /// </summary>
     private readonly ReaderWriterLockSlim _lock = new();
+
+    /// <summary>
+    /// The version of VISUM to use.
+    /// TODO: Make this change depending on the version of VISUM that is actually loaded.
+    /// </summary>
+    private const string VersionString = "2401";
 
     /// <summary>
     /// Initializes a new instead of VISUM.
@@ -40,7 +46,7 @@ public sealed partial class VisumInstance : IDisposable
     }
 
     /// <summary>
-    /// Internal only, get the real Visum instance.
+    /// Internal only, get the real VISUM instance.
     /// </summary>
     internal IVisum? Visum => _visum;
 
@@ -94,7 +100,7 @@ public sealed partial class VisumInstance : IDisposable
     /// <summary>
     /// Save the currently loaded version file to the given path
     /// </summary>
-    /// <param name="filePath">The path to save the visum instance to.</param>
+    /// <param name="filePath">The path to save the VISUM instance to.</param>
     public void SaveVersionFile(string filePath)
     {
         try
@@ -135,7 +141,7 @@ public sealed partial class VisumInstance : IDisposable
             using var writer = XmlWriter.Create(fileName);
             writer.WriteStartDocument();
             writer.WriteStartElement("PROCEDURES");
-            writer.WriteElementString("VERSION", "2301");
+            writer.WriteElementString("VERSION", VersionString);
             writer.WriteStartElement("OPERATIONS");
             writeBody(writer);
             writer.WriteEndElement();
