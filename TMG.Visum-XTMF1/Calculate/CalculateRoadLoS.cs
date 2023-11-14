@@ -12,8 +12,32 @@ public sealed class CalculateRoadLoS : IVisumTool
     [SubModelInformation(Required = true, Description = "The demand segment to calculate PrT for.")]
     public DemandSegment Segment = null!;
 
-    [RunParameter("PrT Matrix Type", PrTLosTypes.TCur, "The type of matrix to compute from the previous road assignment.")]
-    public PrTLosTypes Type;
+    public class PrTLoSExport : IModule
+    {
+        [RunParameter("PrT Matrix Type", PrTLosTypes.TCur, "The type of matrix to compute from the previous road assignment.")]
+        public PrTLosTypes Type;
+
+        [RunParameter("Matrix Code", "", "If non-blank the matrix's code will be reassigned to the specified code.")]
+        public string MatrixCode = null!;
+
+        [RunParameter("Matrix Name", "", "If non-blank the matrix will be renamed to the specified name.")]
+        public string MatrixName = null!;
+
+        public bool RuntimeValidation(ref string? error)
+        {
+            return true;
+        }
+
+        public string Name { get; set; } = null!;
+
+        public float Progress => 0f;
+
+        public Tuple<byte, byte, byte> ProgressColour => new(50,150,50);
+
+    }
+
+    [SubModelInformation(Required = true, Description = "The types of matrices to export.")]
+    public PrTLoSExport[] ToExport = null!;
 
     public void Execute(VisumInstance instance)
     {
@@ -21,7 +45,19 @@ public sealed class CalculateRoadLoS : IVisumTool
         try
         {
             segment = GetSegment(instance);
-            instance.CalculateRoadLoS(segment, Type);
+            List<VisumMatrix> matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type).ToList());
+            for(int i =0; i < matrices.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(ToExport[i].MatrixCode))
+                {
+                    matrices[i].Code = ToExport[i].MatrixCode;
+                }
+                if (!string.IsNullOrWhiteSpace(ToExport[i].MatrixName))
+                {
+                    matrices[i].Name = ToExport[i].MatrixName;
+                }
+                matrices[i].Dispose();
+            }
         }
         catch (VisumException e)
         {

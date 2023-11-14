@@ -4,13 +4,13 @@ namespace TMG.Visum;
 
 public partial class VisumInstance
 {
-
     /// <summary>
-    /// 
+    /// Calculate a Road LoS attribute and generate a matrix.
     /// </summary>
-    /// <param name="demandSegment"></param>
-    /// <exception cref="VisumException"></exception>
-    public VisumMatrix CalculateRoadLoS(VisumDemandSegment demandSegment, PrTLosTypes type)
+    /// <param name="segment">The demand segment to process.</param>
+    /// <param name="types">The different types of PrT skims to generate.</param>
+    /// <exception cref="VisumException">Can throw an exception if VISUM has an issue when processing the command.</exception>
+    public List<VisumMatrix> CalculateRoadLoS(VisumDemandSegment segment, List<RoadAssignment.PrTLosTypes> types)
     {
         string? tempFileName = null;
         try
@@ -33,7 +33,7 @@ public partial class VisumInstance
                 writer.WriteAttributeString("PARENTGROUPINDEX", "0");
 
                 writer.WriteStartElement("PRTSKIMMATRIXPARA");
-                writer.WriteAttributeString("DSEG", demandSegment.Code);
+                writer.WriteAttributeString("DSEG", segment.Code);
                 writer.WriteAttributeString("FORMAT", "V");
                 writer.WriteAttributeString("ONLYRELATIONSWITHDEMAND", "0");
                 writer.WriteAttributeString("SEARCHCRITERION", "Impedance");
@@ -48,25 +48,30 @@ public partial class VisumInstance
                 writer.WriteAttributeString("WEIGHTING", "Route Vol Avg");
 
                 // Specify the particular matrix to compute
-                writer.WriteStartElement("SINGLESKIMMATRIXPARA");
-                writer.WriteAttributeString("CALCULATE", "1");
-                writer.WriteAttributeString("Name", type.GetCalculationName());
-                writer.WriteAttributeString("SAVETOFILE", "0");
-                // end SINGLESKIMMATRIXPARA
-                writer.WriteEndElement();
-
-                // end PRTSKIMMATRIXPARA
+                foreach(var type in types)
+                {
+                    writer.WriteStartElement("SINGLESKIMMATRIXPARA");
+                    writer.WriteAttributeString("CALCULATE", "1");
+                    writer.WriteAttributeString("Name", type.GetCalculationName());
+                    writer.WriteAttributeString("SAVETOFILE", "0");
+                    // end SINGLESKIMMATRIXPARA
+                    writer.WriteEndElement();
+                }
                 writer.WriteEndElement();
                 // end OPERATION
                 writer.WriteEndElement();
-
             });
             // Wipe out the previous procedures and run this.
             _visum.Procedures.OpenXmlWithOptions(tempFileName);
             _visum.Procedures.Execute();
-            return GetMatrixByNameInner(type.GetMatrixName(demandSegment));
+            var ret = new List<VisumMatrix>();
+            foreach(var type in types)
+            {
+                ret.Add(GetMatrixByNameInner(type.GetMatrixName(segment)));
+            }
+            return ret;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             throw new VisumException(ex);
         }
@@ -75,6 +80,17 @@ public partial class VisumInstance
             Files.SafeDelete(tempFileName);
             _lock.ExitWriteLock();
         }
+    }
+
+    /// <summary>
+    /// Calculate a Road LoS attribute and generate a matrix.
+    /// </summary>
+    /// <param name="demandSegment">The demand segment to process.</param>
+    /// <param name="type">The PrT Skim matrix to generate.</param>
+    /// <exception cref="VisumException">Can throw an exception if VISUM has an issue when processing the command.</exception>
+    public VisumMatrix CalculateRoadLoS(VisumDemandSegment demandSegment, PrTLosTypes type)
+    {
+        return CalculateRoadLoS(demandSegment, [type])[0];
     }
 
 }

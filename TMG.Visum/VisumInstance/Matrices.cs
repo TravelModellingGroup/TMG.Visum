@@ -39,8 +39,7 @@ public partial class VisumInstance : IDisposable
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            IMatrix? matrix;
-            if (!TryGetMatrixInner(number, out matrix))
+            if (!TryGetMatrixInner(number, out IMatrix? matrix))
             {
                 matrix = _visum.Net.AddMatrix(number,
                 ObjectTypeRefT.OBJECTTYPEREF_ZONE,

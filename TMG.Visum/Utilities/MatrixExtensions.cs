@@ -15,6 +15,18 @@ public static class MatrixExtensions
     }
 
     /// <summary>
+    /// Get the code of the matrix.
+    /// </summary>
+    /// <param name="matrix"></param>
+    /// <returns>The code of the matrix.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string GetCode(this IMatrix matrix)
+    {
+        var name = matrix.AttValue["Code"] as string;
+        return name!;
+    }
+
+    /// <summary>
     /// Set the name of the matrix.
     /// </summary>
     /// <param name="matrix"></param>
@@ -23,6 +35,17 @@ public static class MatrixExtensions
     public static void SetName(this IMatrix matrix, string name)
     {
         matrix.AttValue["Name"] = name;
+    }
+
+    /// <summary>
+    /// Set the code of the matrix.
+    /// </summary>
+    /// <param name="matrix"></param>
+    /// <param name="code">The code to set it to.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SetCode(this IMatrix matrix, string code)
+    {
+        matrix.AttValue["Code"] = code;
     }
 
     /// <summary>

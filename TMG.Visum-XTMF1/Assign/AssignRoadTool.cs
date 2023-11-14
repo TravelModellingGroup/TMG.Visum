@@ -7,14 +7,20 @@ namespace TMG.Visum.Assign;
 [ModuleInformation(Description = "Run a road assignment.")]
 public sealed partial class AssignRoadTool : IVisumTool
 {
-    [RunParameter("Maximum Iterations", 100, "The maximum number of iterations to use when balancing the road assignment.")]
+    [RunParameter("Maximum Iterations", 100, "The maximum number of iterations to use when balancing the road assignment.", Index = 0)]
     public int MaximumIterations;
 
-    [RunParameter("MaxRelative Link Impedance", 0.01f, "The maximum impedance on the link before we stop iterating.")]
+    [RunParameter("Max Gap", 0.01f, "The value is the weighted volume difference between the vehicle impedance of the network of the current iteration and the hypothetical vehicle impedance.", Index = 1)]
+    public float MaxGap;
+
+    [RunParameter("MaxRelative Link Impedance", 0.01f, "The maximum impedance on the link before we stop iterating.", Index = 2)]
     public float MaxRelativeLinkImpedance;
 
     [SubModelInformation(Required = true, Description = "The demand segments to execute in the road assignment.")]
     public DemandSegment[] DemandSegments = null!;
+
+    [SubModelInformation(Required = false, Description = "Optionally specify the road assignment algorithm to use.")]
+    public RoadAssignmentAlgorithmModule? RoadAssignmentAlgorithm;
 
     public void Execute(VisumInstance instance)
     {
@@ -31,9 +37,9 @@ public sealed partial class AssignRoadTool : IVisumTool
         finally
         {
             // Release the variables.
-            if(segments is not null)
+            if (segments is not null)
             {
-                for(int i = 0; i < segments.Count; i++)
+                for (int i = 0; i < segments.Count; i++)
                 {
                     segments[i]?.DemandMatrix?.Dispose();
                     segments[i].Dispose();
@@ -66,16 +72,18 @@ public sealed partial class AssignRoadTool : IVisumTool
         return new StabilityCriteria()
         {
             MaxIterations = MaximumIterations,
+            MaxGap = MaxGap,
             MaxRelativeDifferenceLinkImpedance = MaxRelativeLinkImpedance,
         };
     }
 
     private RoadAssignmentAlgorithm GetAssignmentAlgorithm()
     {
-        return new LUCEAssignment()
+        if (RoadAssignmentAlgorithm is not null)
         {
-            
-        };
+            return RoadAssignmentAlgorithm.GetAlgorithm();
+        }
+        return new LUCEAssignment() { };
     }
 
     public bool RuntimeValidation(ref string? error)
@@ -83,10 +91,10 @@ public sealed partial class AssignRoadTool : IVisumTool
         return true;
     }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     public float Progress => 0f;
 
-    public Tuple<byte, byte, byte> ProgressColour => new Tuple<byte, byte, byte>(50, 150, 50);
+    public Tuple<byte, byte, byte> ProgressColour => new(50, 150, 50);
 
 }

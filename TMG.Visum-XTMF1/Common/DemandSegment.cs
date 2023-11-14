@@ -7,7 +7,7 @@ public class DemandSegment : IModule
     [RunParameter("Code", "C", "The code for the demand segment.")]
     public string Code = null!;
 
-    [RunParameter("Demand Matrix", "", "The number of the matrix that will be used for demand.")]
+    [RunParameter("Demand Matrix", "", "The name of the matrix that will be used for demand.")]
     public string DemandMatrix = null!;
 
     public bool RuntimeValidation(ref string? error)
