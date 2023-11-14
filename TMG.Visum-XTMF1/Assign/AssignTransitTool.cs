@@ -79,6 +79,10 @@ public sealed class AssignTransitTool : IVisumTool
         }
     }
 
+    /// <summary>
+    /// The matrices to rename using the LoSToGenerate.
+    /// </summary>
+    /// <param name="processedMatrices">The matrices to rename.</param>
     private void RenameMatrices(List<List<VisumMatrix>>? processedMatrices)
     {
         if (processedMatrices is null)
