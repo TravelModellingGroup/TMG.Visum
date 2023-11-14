@@ -28,7 +28,7 @@ public sealed class CalculateRoadLoS : IVisumTool
             return true;
         }
 
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         public float Progress => 0f;
 
