@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Interop.VISUMLIB">
       <HintPath>Interop.VISUMLIB.dll</HintPath>
     </Reference>
