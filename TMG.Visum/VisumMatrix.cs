@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using CommunityToolkit.HighPerformance;
+using System.Diagnostics.CodeAnalysis;
 using VISUMLIB;
 
 namespace TMG.Visum;
@@ -159,11 +160,19 @@ public sealed class VisumMatrix : IDisposable
             throw new VisumException($"The size of the arrays are not the same expected {ret.Length} but received {flat.Length}!");
         }
         int pos = 0;
-        for (int i = 0; i < rows; i++)
+        Span2D<T> retSpan = ret;
+        if (retSpan.TryGetSpan(out var flatRetSpan))
         {
-            for (int j = 0; j < columns; j++)
+            flat.CopyTo(flatRetSpan);
+        }
+        else
+        {
+            for (int i = 0; i < rows; i++)
             {
-                ret[i, j] = flat[pos++];
+                var destinationRow = retSpan.GetRowSpan(i);
+                var srcRow = flat.AsSpan(pos, destinationRow.Length);
+                srcRow.CopyTo(destinationRow);
+                pos += destinationRow.Length;
             }
         }
         return ret;
@@ -178,12 +187,14 @@ public sealed class VisumMatrix : IDisposable
         {
             throw new VisumException($"The size of the arrays are not the same expected {Rows} but received {flat.Length}!");
         }
+        int pos = 0;
+        Span2D<T> retSpan = ret;
         for (int i = 0; i < rows; i++)
         {
-            for (int j = 0; j < columns; j++)
-            {
-                ret[i, j] = flat[i][j];
-            }
+            var destinationRow = retSpan.GetRowSpan(i);
+            var srcRow = flat[i].AsSpan();
+            srcRow.CopyTo(destinationRow);
+            pos += destinationRow.Length;
         }
         return ret;
     }
@@ -233,29 +244,22 @@ public sealed class VisumMatrix : IDisposable
         var rows = matrix.GetLength(0);
         var cols = matrix.GetLength(1);
         var ret = new T[rows][];
+        Span2D<T> matrixSpan = matrix;
         for (int i = 0; i < ret.Length; i++)
         {
             ret[i] = new T[cols];
-            for (int j = 0; j < ret[i].Length; j++)
-            {
-                ret[i][j] = matrix[i,j];
-            }
+            var retRow = ret[i].AsSpan();
+            var srcRow = matrixSpan.GetRowSpan(i);
+            srcRow.CopyTo(retRow);
         }
         return ret;
     }
 
     private static T[] ConvertToArray<T>(T[,] matrix)
     {
-        var rows = matrix.GetLength(0);
-        var cols = matrix.GetLength(1);
-        var ret = new T[rows * cols];
-        for (int i = 0; i < rows; i++)
-        {
-            for (int j = 0; j < cols; j++)
-            {
-                ret[i * cols + j] = matrix[i, j];
-            }
-        }
+        var ret = new T[matrix.Length];
+        Span2D<T> matrixSpan = matrix;
+        matrixSpan.CopyTo(ret);
         return ret;
     }
 
