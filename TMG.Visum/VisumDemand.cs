@@ -51,7 +51,7 @@ public sealed class VisumDemandSegment : IDisposable
     }
 
     /// <summary>
-    /// Get or set the demand matrix that this semgnet represents.
+    /// Get or set the demand matrix that this segment represents.
     /// </summary>
     public VisumMatrix? DemandMatrix
     {
@@ -66,6 +66,51 @@ public sealed class VisumDemandSegment : IDisposable
         set
         {
             _segment.set_ODMatrix(value?.Matrix ?? null);
+        }
+    }
+
+    /// <summary>
+    /// Get the occupancy rate for the demand segment.
+    /// </summary>
+    public double OccupancyRate
+    {
+        get => (double)_segment.AttValue["OccupancyRate"];
+        set => _segment.AttValue["OccupancyRate"] = value;
+    }
+
+    /// <summary>
+    /// Projection factor to project demand values from assignment period to analysis horizon.
+    /// </summary>
+    public double PrFacAH
+    {
+        get => (double)_segment.AttValue["PrFacAH"];
+        set => _segment.AttValue["PrFacAH"] = value;
+    }
+
+    /// <summary>
+    /// Projection factor to project demand values from assignment period to analysis period.
+    /// </summary>
+    public double PrFacAP
+    {
+        get => (double)_segment.AttValue["PrFacAP"];
+        set => _segment.AttValue["PrFacAP"] = value;
+    }
+
+    public VisumDemandTimeSeries DemandTimeSeries
+    {
+        get
+        {
+            if (_instance.Visum is IVisum instance)
+            {
+                var description = _segment.GetDemandDescription();
+                var timeSeriesNumber = (int)(double)description.AttValue["DemandTimeSeriesNo"];
+                return _instance.GetDemandTimeSeries(timeSeriesNumber);
+            }
+            throw new VisumException("The Visum instance was already disposed.");
+        }
+        set
+        {
+
         }
     }
 
