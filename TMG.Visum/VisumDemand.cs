@@ -110,7 +110,11 @@ public sealed class VisumDemandSegment : IDisposable
         }
         set
         {
-
+            if (_instance.Visum is IVisum instance)
+            {
+                var description = _segment.GetDemandDescription();
+                description.AttValue["DemandTimeSeriesNo"] = (double)value.Number;
+            }
         }
     }
 

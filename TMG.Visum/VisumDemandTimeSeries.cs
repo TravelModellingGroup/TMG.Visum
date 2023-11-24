@@ -1,4 +1,5 @@
-﻿using VISUMLIB;
+﻿using System.Diagnostics.CodeAnalysis;
+using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -9,7 +10,7 @@ namespace TMG.Visum;
 public sealed class VisumDemandTimeSeries : IDisposable
 {
     private IDemandTimeSeries _timeSeries;
-    private VisumInstance? _instance;
+    private VisumInstance _instance;
 
     internal VisumDemandTimeSeries(IDemandTimeSeries timeSeries, VisumInstance instance)
     {
@@ -40,8 +41,8 @@ public sealed class VisumDemandTimeSeries : IDisposable
     /// </summary>
     public int Number
     {
-        get => (int)_timeSeries.AttValue["No"];
-        set => _timeSeries.AttValue["No"] = value;
+        get => (int)(double)_timeSeries.AttValue["No"];
+        set => _timeSeries.AttValue["No"] = (double)value;
     }
 
     /// <summary>
@@ -61,16 +62,22 @@ public sealed class VisumDemandTimeSeries : IDisposable
         get
         {
             var number = StandardTimeSeriesNumber;
-            if (_instance.Visum is IVisum instance)
+            if (_instance.Visum is not IVisum instance)
             {
-                return _instance.GetStandardTimeSeries(number);
+                ThrowVisumDisposed();
             }
-            throw new VisumException("The Visum instance was already disposed.");
+            return _instance.GetStandardTimeSeries(number);
         }
         set
         {
-
+            StandardTimeSeriesNumber = value.Number;
         }
+    }
+
+    [DoesNotReturn]
+    private static void ThrowVisumDisposed()
+    {
+        throw new VisumException("The Visum instance was already disposed.");
     }
 
     ~VisumDemandTimeSeries()
@@ -97,5 +104,14 @@ public sealed class VisumDemandTimeSeries : IDisposable
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// INTERNAL ONLY - Get the wrapped Demand Time Series.
+    /// </summary>
+    /// <returns>The wrapped DemandTimeSeries object.</returns>
+    internal IDemandTimeSeries GetInnerTimeSeries()
+    {
+        return _timeSeries;
     }
 }

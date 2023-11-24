@@ -109,4 +109,13 @@ public class VisumStandardTimeSeries : IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
+    /// <summary>
+    /// INTERNAL ONLY - Gets the wrapped object.
+    /// </summary>
+    /// <returns>The underlying object this wrapper holds.</returns>
+    internal ITimeSeries GetWrappedObject()
+    {
+        return _timeSeries;
+    }
 }
