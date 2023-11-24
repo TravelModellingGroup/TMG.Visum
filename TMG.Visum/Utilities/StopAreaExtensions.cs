@@ -8,8 +8,8 @@ internal static class StopAreaExtensions
     /// <param name="stopArea"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ZoneNumber(this IStopArea stopArea)
+    public static int StopNumber(this IStopArea stopArea)
     {
-        return (int)stopArea.AttValue["No"];
+        return (int)(double)stopArea.AttValue["No"];
     }
 }

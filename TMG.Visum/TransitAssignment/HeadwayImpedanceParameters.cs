@@ -56,6 +56,14 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
 
     public float WalkTimeValue { get; init; } = 1.0f;
 
+    public int AssignmentStartDayIndex { get; init; } = 1;
+
+    public TimeOnly AssignmentStartTime { get; init; } = TimeOnly.Parse("00:00:00");
+
+    public int AssignmentEndDayIndex { get; init; } = 2;
+
+    public TimeOnly AssignmentEndTime { get; init; } = TimeOnly.Parse("00:00:00");
+
     override internal void Write(XmlWriter writer, IList<PutLoSTypes> loSToGenerate)
     {
         writer.WriteStartElement("HEADWAYBASEDASSIGNMENTPARAMETERS");
@@ -64,10 +72,15 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("CALCULATESKIMMATRICES", "1");
         writer.WriteAttributeString("HEADWAYCALCULATION", "ExpectedWaitTime");
         writer.WriteAttributeString("SELECTODRELATIONTYPE", "All");
+        //  TIMEINTERVALENDDAYINDEX="123" TIMEINTERVALENDTIME="00:00:00"  TIMEINTERVALSTARTDAYINDEX = "122" TIMEINTERVALSTARTTIME = "00:00:00"
+        writer.WriteAttributeString("TIMEINTERVALENDDAYINDEX", AssignmentEndDayIndex.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALENDTIME", AssignmentEndTime.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALSTARTDAYINDEX", AssignmentStartDayIndex.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALSTARTTIME", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
 
         writer.WriteStartElement("HEADWAYBASEDINTERVALDATA");
-        writer.WriteAttributeString("TIMEINTERVALDAYINDEX", "1");
-        writer.WriteAttributeString("TIMEINTERVALSTARTTIME", "00:00:00");
+        writer.WriteAttributeString("TIMEINTERVALDAYINDEX", AssignmentStartDayIndex.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALSTARTTIME", AssignmentEndDayIndex.ToString(CultureInfo.InvariantCulture));
         // end HEADWAYBASEDINTERVALDATA
         writer.WriteEndElement();
 

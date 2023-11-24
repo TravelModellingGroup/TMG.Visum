@@ -9,11 +9,12 @@ internal static class MainZonesExtensions
     /// <returns></returns>
     public static int[] GetZoneNumbers(this IMainZones us)
     {
-        List<int> zoneNumbers = new(us.Count);
+        int[] zoneNumbers = new int[us.Count];
+        int pos = 0;
         foreach (IMainZone zone in us)
         {
-            zoneNumbers.Add(zone.ZoneNumber());
+            zoneNumbers[pos++] = zone.ZoneNumber();
         }
-        return zoneNumbers.ToArray();
+        return zoneNumbers;
     }
 }

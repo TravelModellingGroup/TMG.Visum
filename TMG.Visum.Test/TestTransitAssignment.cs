@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TMG.Visum.TransitAssignment;
+﻿using TMG.Visum.TransitAssignment;
 
 namespace TMG.Visum.Test;
 
@@ -13,10 +12,10 @@ public class TestTransitAssignment
         try
         {
             using var transitSegment = instance.GetDemandSegment("X");
-            using var carDemand = instance.CreateDemandMatrix(1, "X demand");
+            using var transitDemand = instance.CreateDemandMatrix(1, "X demand");
             // Assign 3 demand for all OD.
-            carDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
-            transitSegment.DemandMatrix = carDemand;
+            transitDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
+            transitSegment.DemandMatrix = transitDemand;
             var matrices = instance.ExecuteTransitAssignment(transitSegment,
                 new PutLoSTypes[]
                 {
@@ -24,6 +23,40 @@ public class TestTransitAssignment
                     PutLoSTypes.JourneyTime,
                 },
                 new HeadwayImpedanceParameters());
+            DisposeMatrices(matrices);
+        }
+        finally
+        {
+            instance.SaveVersionFile("Temp.ver");
+        }
+    }
+
+    [TestMethod]
+    public void TestWSPTransitAssignment()
+    {
+        //using var instance = new VisumInstance(@"Z:\Projects\2023\Halifax\V4Input\BaseNetwork.ver");
+        using var instance = new VisumInstance(@"TestNetwork-Calendar.ver");
+        try
+        {
+            using var transitSegment = instance.GetDemandSegment("X");
+            using var transitDemand = instance.CreateDemandMatrix(1, "X demand");
+            var numberOfZones = instance.GetZoneCount();
+            // Assign 3 demand for all OD.
+            transitDemand.SetValues(Enumerable.Range(0, numberOfZones * numberOfZones).Select(_ => 0.01f).ToArray());
+            transitSegment.DemandMatrix = transitDemand;
+            var matrices = instance.ExecuteTransitAssignment(transitSegment,
+                new PutLoSTypes[]
+                {
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
+                },
+                new HeadwayImpedanceParameters()
+                {
+                    AssignmentStartDayIndex = 122,
+                    AssignmentEndDayIndex = 122,
+                    AssignmentStartTime = TimeOnly.Parse("17:00:00"),
+                    AssignmentEndTime = TimeOnly.Parse("18:00:00")
+                });
             DisposeMatrices(matrices);
         }
         finally

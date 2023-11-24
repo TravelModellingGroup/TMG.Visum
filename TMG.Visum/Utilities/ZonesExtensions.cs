@@ -7,12 +7,13 @@ internal static class ZonesExtensions
 {
     public static int[] GetZoneNumbers(this IZones us)
     {
-        List<int> zoneNumbers = new(us.Count);
+        int[] ret = new int[us.Count];
+        int pos = 0;
         foreach (IZone zone in us)
         {
-            zoneNumbers.Add(zone.ZoneNumber());
+            ret[pos++] = zone.ZoneNumber();
         }
-        return zoneNumbers.ToArray();
+        return ret;
     }
 
 }

@@ -68,7 +68,7 @@ public sealed class VisumMatrix : IDisposable
         {
             ObjectTypeRefT.OBJECTTYPEREF_ZONE => _instance.Net.Zones.GetZoneNumbers(),
             ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => _instance.Net.MainZones.GetZoneNumbers(),
-            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => _instance.Net.StopAreas.GetZoneNumbers(),
+            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => _instance.Net.StopAreas.GetStopAreaNumbers(),
             _ => ThrowInvalidType<int[]>(_basedOn)
         };
     }
