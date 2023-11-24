@@ -91,6 +91,34 @@ public partial class VisumInstance
     }
 
     /// <summary>
+    /// Delete the standard time series with the given name.
+    /// </summary>
+    /// <param name="name">The name of the time series to delete</param>
+    /// <returns>True if there was a time series with the given name that was deleted.</returns>
+    public bool RemoveStandardTimeSeries(string name)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            ObjectDisposedException.ThrowIf(_visum is null, this);
+
+            foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
+            {
+                if (name.Equals((string)series.AttValue["Name"]))
+                {
+                    _visum.Net.RemoveTimeSeries(series);
+                    return true;
+                }
+            }
+            return false;
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    /// <summary>
     /// Get a standard time series given the time series' number.
     /// </summary>
     /// <param name="timeSeriesNumber">The number of the standard time series to get.</param>

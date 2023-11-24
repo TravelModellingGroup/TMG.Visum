@@ -28,4 +28,35 @@ public class TestStandardTimeSeries
         Assert.AreEqual(newTimeSeries.Number, foundTimeSeries.Number);
     }
 
+    [TestMethod]
+    public void RemoveStandardTimeSeriesByReference()
+    {
+        const string name = "NewTimeSeries";
+        using var instance = new VisumInstance("TestNetwork.ver");
+        using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+        instance.RemoveStandardTimeSeries(newTimeSeries);
+    }
+
+    [TestMethod]
+    public void RemoveStandardTimeSeriesByNumber()
+    {
+        int number;
+        const string name = "NewTimeSeries";
+        using var instance = new VisumInstance("TestNetwork.ver");
+        {
+            using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+            number = newTimeSeries.Number;
+        }
+        instance.RemoveStandardTimeSeries(number);
+    }
+
+    [TestMethod]
+    public void RemoveStandardTimeSeriesByName()
+    {
+        const string name = "NewTimeSeries";
+        using var instance = new VisumInstance("TestNetwork.ver");
+        using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+        instance.RemoveStandardTimeSeries(name);
+    }
+
 }
