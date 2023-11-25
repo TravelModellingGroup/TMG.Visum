@@ -10,6 +10,6 @@ internal static class MainZoneExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ZoneNumber(this IMainZone zone)
     {
-        return (int)zone.AttValue["No"];
+        return (int)(double)zone.AttValue["No"];
     }
 }

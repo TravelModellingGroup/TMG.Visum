@@ -140,8 +140,9 @@ public sealed partial class VisumInstance : IDisposable
         {
             using var writer = XmlWriter.Create(fileName);
             writer.WriteStartDocument();
+            
             writer.WriteStartElement("PROCEDURES");
-            writer.WriteElementString("VERSION", VersionString);
+            writer.WriteAttributeString("VERSION", VersionString);
             writer.WriteStartElement("OPERATIONS");
             writeBody(writer);
             writer.WriteEndElement();

@@ -5,13 +5,14 @@ namespace TMG.Visum.Assign.TransitAssignmentAlgorithm;
 [ModuleInformation(Description = "Provides parameters to control the Headway PutAssignment algorithm.")]
 public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
 {
-    [RunParameter("AccessTimeVal", 0.0f, "")]
+
+    [RunParameter("AccessTimeVal", 1.0f, "")]
     public float AccessTimeVal;
 
-    [RunParameter("BoardingPenaltyPuTAttribute", 0.0f, "")]
+    [RunParameter("BoardingPenaltyPuTAttribute", "", "")]
     public string BoardingPenaltyPuTAttribute = null!;
 
-    [RunParameter("BoardingPenaltyPuTAuxAttribute", 0.0f, "")]
+    [RunParameter("BoardingPenaltyPuTAuxAttribute", "", "")]
     public string BoardingPenaltyPuTAuxAttribute = null!;
 
     [RunParameter("EgressTimeVal", 1.0f, "")]
@@ -53,10 +54,29 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
     [RunParameter("WalkTimeValue", 1.0f, "")]
     public float WalkTimeValue;
 
+    [RunParameter("Assignment Start Day Index", 1, "")]
+    public int AssignmentStartDayIndex;
+
+    [RunParameter("Assignment Start Time", "00:00:00", typeof(TimeOnly), "")]
+    public TimeOnly AssignmentStartTime;
+
+    [RunParameter("Assignment End Day Index", 2, "")]
+    public int AssignmentEndDayIndex;
+
+    [RunParameter("Assignment End Time", "00:00:00", typeof(TimeOnly), "")]
+    public TimeOnly AssignmentEndTime;
+
+    [RunParameter("Share Lower Bounds", 0.05f, "")]
+    public float ShareLowerBounds;
+
     internal override TransitAlgorithmParameters GetTransitParameters()
     {
         return new HeadwayImpedanceParameters()
         {
+            AssignmentStartTime = AssignmentStartTime,
+            AssignmentStartDayIndex = AssignmentStartDayIndex,
+            AssignmentEndTime = AssignmentEndTime,
+            AssignmentEndDayIndex = AssignmentEndDayIndex,
             AccessTimeVal = AccessTimeVal,
             BoardingPenaltyPuTAttribute = BoardingPenaltyPuTAttribute,
             BoardingPenaltyPuTAuxAttribute = BoardingPenaltyPuTAuxAttribute,
@@ -71,6 +91,7 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
             PublicTransitAuxiliaryTimeValue = PublicTransitAuxiliaryTimeValue,
             TransferWaitTimeValue = TransferWaitTimeValue,
             TransferWaitTimeWeightAttribute = TransferWaitTimeWeightAttribute,
+            ShareLowerBounds = ShareLowerBounds,
         };
     }
 }

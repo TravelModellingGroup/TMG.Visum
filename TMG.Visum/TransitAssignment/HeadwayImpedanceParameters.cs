@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Xml;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TMG.Visum.TransitAssignment;
 
@@ -56,18 +57,40 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
 
     public float WalkTimeValue { get; init; } = 1.0f;
 
+    public int AssignmentStartDayIndex { get; init; } = 1;
+
+    public TimeOnly AssignmentStartTime { get; init; } = TimeOnly.Parse("00:00:00");
+
+    public int AssignmentEndDayIndex { get; init; } = 2;
+
+    public TimeOnly AssignmentEndTime { get; init; } = TimeOnly.Parse("00:00:00");
+
+    public bool RemoveDominatedPaths { get; init; } = true;
+
+    public float ShareLowerBounds { get; init; } = 0.05f;
+
     override internal void Write(XmlWriter writer, IList<PutLoSTypes> loSToGenerate)
     {
         writer.WriteStartElement("HEADWAYBASEDASSIGNMENTPARAMETERS");
         writer.WriteStartElement("HEADWAYBASEDBASEPARA");
         writer.WriteAttributeString("CALCULATEASSIGNMENT", "1");
+        writer.WriteAttributeString("CALCULATESFFORPUTODPAIRLIST", "0");
         writer.WriteAttributeString("CALCULATESKIMMATRICES", "1");
+        writer.WriteAttributeString("FROMDESTZONENO", "");
         writer.WriteAttributeString("HEADWAYCALCULATION", "ExpectedWaitTime");
+        writer.WriteAttributeString("MPAISACTIVE", "0");
         writer.WriteAttributeString("SELECTODRELATIONTYPE", "All");
+        //  TIMEINTERVALENDDAYINDEX="123" TIMEINTERVALENDTIME="00:00:00"  TIMEINTERVALSTARTDAYINDEX = "122" TIMEINTERVALSTARTTIME = "00:00:00"
+        writer.WriteAttributeString("TIMEINTERVALENDDAYINDEX", AssignmentEndDayIndex.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALENDTIME", AssignmentEndTime.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALSTARTDAYINDEX", AssignmentStartDayIndex.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALSTARTTIME", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
 
         writer.WriteStartElement("HEADWAYBASEDINTERVALDATA");
-        writer.WriteAttributeString("TIMEINTERVALDAYINDEX", "1");
-        writer.WriteAttributeString("TIMEINTERVALSTARTTIME", "00:00:00");
+        writer.WriteAttributeString("TIMEINTERVALDAYINDEX", AssignmentStartDayIndex.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TIMEINTERVALSTARTTIME", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("TODESTZONENO", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
+
         // end HEADWAYBASEDINTERVALDATA
         writer.WriteEndElement();
 
@@ -91,14 +114,14 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("INTERCHANGETYPE", "Use");
         writer.WriteAttributeString("MAXPOLYNOMDEGREEFORINTEGRATION", "30");
         writer.WriteAttributeString("NUMSIMULATIONS", "100");
-        writer.WriteAttributeString("ONLYACTIVETIMEPROFILES", "0");
-        writer.WriteAttributeString("PASSENGERINFORMATIONTYPE", "DeparturesFromStopArea");
-        writer.WriteAttributeString("REMOVEDOMINATEDPATHS", "0");
-        writer.WriteAttributeString("SHARELOWERBOUNDABS", "0.001");
+        writer.WriteAttributeString("ONLYACTIVETIMEPROFILES", "1");
+        writer.WriteAttributeString("PASSENGERINFORMATIONTYPE", "None_ExpDistRib_HW");
+        writer.WriteAttributeString("REMOVEDOMINATEDPATHS", RemoveDominatedPaths ? "1" : "0");
+        writer.WriteAttributeString("SHARELOWERBOUNDABS", ShareLowerBounds.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("SHAREUPPERBOUNDREL", "1");
         writer.WriteAttributeString("USECALCULATIONTIMEOPTIMIZEDALGORITHM", "1");
-        writer.WriteAttributeString("USEDISCRCHOICEAMONGSTOPAREAS", "1");
-        writer.WriteAttributeString("USEDISCRCHOICEBETWEENBOARDANDALIGHT", "1");
+        writer.WriteAttributeString("USEDISCRCHOICEAMONGSTOPAREAS", "0");
+        writer.WriteAttributeString("USEDISCRCHOICEBETWEENBOARDANDALIGHT", "0");
 
         // end HEADWAYBASEDSEARCHPARA
         writer.WriteEndElement();
@@ -132,7 +155,7 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         // ORIGINWAITTIMESTOPAREAWEIGHTATTR=""
         writer.WriteAttributeString("ORIGINWAITTIMETIMEPROFILEWEIGHTATTR", OriginWaitTimeTimeProfileWeightAttribute);
         // ORIGINWAITTIMETIMEPROFILEWEIGHTATTR=""
-        writer.WriteAttributeString("ORIGINWAITTIMEVAL", OriginWaitTimeTimeProfileWeightAttribute);
+        writer.WriteAttributeString("ORIGINWAITTIMEVAL", OriginWaitTimeValue.ToString(CultureInfo.InvariantCulture));
         // ORIGINWAITTIMEVAL="6"
         writer.WriteAttributeString("PJTVAL", PerceivedJourneyTimeValue.ToString(CultureInfo.InvariantCulture));
         // PJTVAL="1"
@@ -150,6 +173,16 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteEndElement();
 
         writer.WriteStartElement("PUTSKIMMATRIXPARA");
+        // CALCULATEANALYSISTIMEINTERVALSKIMS = "0" FILENAME = "" FORMAT = "V-Format" FUNCTION = "AggregateMean" LOWIMPCONNSHARE = "50" QUANTILE = "50" SELECTODRELATIONTYPE = "All" SEPARATOR = "Blank" VOLUMEWEIGHTED = "1"
+        writer.WriteAttributeString("CALCULATEANALYSISTIMEINTERVALSKIMS", WalkTimeValue.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("FILENAME", "");
+        writer.WriteAttributeString("FORMAT", "V-Format");
+        writer.WriteAttributeString("FUNCTION", "AggregateMean");
+        writer.WriteAttributeString("LOWIMPCONNSHARE", ShareLowerBounds.ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("QUANTILE", "50");
+        writer.WriteAttributeString("SELECTODRELATIONTYPE", "All");
+        writer.WriteAttributeString("SEPARATOR", "Blank");
+        writer.WriteAttributeString("VOLUMEWEIGHTED", "1");
         foreach (var matrix in loSToGenerate)
         {
             writer.WriteStartElement("SINGLESKIMMATRIXPARA");
