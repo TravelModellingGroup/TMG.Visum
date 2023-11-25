@@ -103,24 +103,21 @@ public sealed partial class VisumInstance : IDisposable
     /// <param name="filePath">The path to save the VISUM instance to.</param>
     public void SaveVersionFile(string filePath)
     {
+        if (String.IsNullOrEmpty(filePath))
+        {
+            throw new VisumException($"{filePath} is an invalid file path to save a version file to.");
+        }
         try
         {
             _lock.EnterReadLock();
-            ObjectDisposedException.ThrowIf(_visum is null, this);
-            if (String.IsNullOrEmpty(filePath))
-            {
-                throw new VisumException($"{filePath} is an invalid file path to save a version file to.");
-            }
+            ObjectDisposedException.ThrowIf(_visum is null, this);   
             // Since people can use this to build a network from scratch if they want to
             // there is no reason to fore them to loading it from disk previously.
-            try
-            {
-                _visum.SaveVersion(Path.GetFullPath(filePath));
-            }
-            catch (Exception ex)
-            {
-                throw new VisumException(ex);
-            }
+            _visum.SaveVersion(Path.GetFullPath(filePath));
+        }
+        catch (Exception ex)
+        {
+            throw new VisumException(ex);
         }
         finally
         {
@@ -140,7 +137,7 @@ public sealed partial class VisumInstance : IDisposable
         {
             using var writer = XmlWriter.Create(fileName);
             writer.WriteStartDocument();
-            
+
             writer.WriteStartElement("PROCEDURES");
             writer.WriteAttributeString("VERSION", VersionString);
             writer.WriteStartElement("OPERATIONS");
