@@ -6,7 +6,7 @@ namespace TMG.Visum.Assign;
 public sealed class AssignTransitTool : IVisumTool
 {
     [SubModelInformation(Required = true, Description = "The demand segments to execute in the road assignment.")]
-    public DemandSegment[] DemandSegments = null!;
+    public DemandSegmentForAssignment[] DemandSegments = null!;
 
     [ModuleInformation(Description = "The level of service matrices to generate.")]
     public sealed class LosMatrix : IModule

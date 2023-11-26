@@ -86,7 +86,7 @@ public partial class VisumInstance
         }
         finally
         {
-            _lock.EnterReadLock();
+            _lock.ExitReadLock();
         }
     }
 
