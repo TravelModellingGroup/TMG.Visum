@@ -29,7 +29,7 @@ public sealed class VisumDemandSegment : IDisposable
     }
 
     /// <summary>
-    /// Internal Only, a reference to the wraped demand segment.
+    /// Internal Only, a reference to the wrapped demand segment.
     /// </summary>
     internal IDemandSegment Segment => _segment;
 
@@ -74,8 +74,8 @@ public sealed class VisumDemandSegment : IDisposable
     /// </summary>
     public double OccupancyRate
     {
-        get => (double)_segment.AttValue["OccupancyRate"];
-        set => _segment.AttValue["OccupancyRate"] = value;
+        get => _segment.GetOccupancyRate();
+        set => _segment.SetOccupancyRate(value);
     }
 
     /// <summary>
@@ -100,21 +100,32 @@ public sealed class VisumDemandSegment : IDisposable
     {
         get
         {
-            if (_instance.Visum is IVisum instance)
-            {
-                var description = _segment.GetDemandDescription();
-                var timeSeriesNumber = (int)(double)description.AttValue["DemandTimeSeriesNo"];
-                return _instance.GetDemandTimeSeries(timeSeriesNumber);
-            }
-            throw new VisumException("The Visum instance was already disposed.");
+            ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
+            var description = _segment.GetDemandDescription();
+            var timeSeriesNumber = (int)(double)description.AttValue["DemandTimeSeriesNo"];
+            return _instance.GetDemandTimeSeries(timeSeriesNumber);
         }
         set
         {
-            if (_instance.Visum is IVisum instance)
-            {
-                var description = _segment.GetDemandDescription();
-                description.AttValue["DemandTimeSeriesNo"] = (double)value.Number;
-            }
+            ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
+            var description = _segment.GetDemandDescription();
+            description.AttValue["DemandTimeSeriesNo"] = (double)value.Number;
+        }
+    }
+
+    /// <summary>
+    /// Get or set the associated mode for this demand segment.
+    /// </summary>
+    public VisumMode Mode
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
+            return new VisumMode(_segment.GetMode(), _instance);
+        }
+        set
+        {
+            _segment.SetMode(value.Mode);
         }
     }
 

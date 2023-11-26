@@ -10,7 +10,7 @@ public sealed class CalculateRoadLoS : IVisumTool
 {
 
     [SubModelInformation(Required = true, Description = "The demand segment to calculate PrT for.")]
-    public DemandSegment Segment = null!;
+    public DemandSegmentForAssignment Segment = null!;
 
     public class PrTLoSExport : IModule
     {

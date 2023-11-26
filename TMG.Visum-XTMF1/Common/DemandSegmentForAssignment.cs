@@ -2,7 +2,10 @@
 
 namespace TMG.Visum;
 
-public class DemandSegment : IModule
+[ModuleInformation(
+    Description = "Contains the information for setting up the demand segment that will be assigned."
+    )]
+public class DemandSegmentForAssignment : IModule
 {
     [RunParameter("Code", "C", "The code for the demand segment.")]
     public string Code = null!;

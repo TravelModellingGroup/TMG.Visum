@@ -17,7 +17,7 @@ public sealed partial class AssignRoadTool : IVisumTool
     public float MaxRelativeLinkImpedance;
 
     [SubModelInformation(Required = true, Description = "The demand segments to execute in the road assignment.")]
-    public DemandSegment[] DemandSegments = null!;
+    public DemandSegmentForAssignment[] DemandSegments = null!;
 
     [SubModelInformation(Required = false, Description = "Optionally specify the road assignment algorithm to use.")]
     public RoadAssignmentAlgorithmModule? RoadAssignmentAlgorithm;

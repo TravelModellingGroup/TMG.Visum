@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.HighPerformance;
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Linq;
 using VISUMLIB;
 
@@ -76,7 +77,7 @@ public partial class VisumInstance
 
             foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
             {
-                if(number == (int)(double)series.AttValue["no"])
+                if (number == (int)(double)series.AttValue["no"])
                 {
                     _visum.Net.RemoveTimeSeries(series);
                     return true;
@@ -126,16 +127,41 @@ public partial class VisumInstance
     /// <exception cref="VisumException">Thrown if there is no standard time series with the given number.</exception>
     public VisumStandardTimeSeries GetStandardTimeSeries(int timeSeriesNumber)
     {
+        if (TryGetStandardTimeSeries(timeSeriesNumber, out var ret))
+        {
+            return ret;
+        }
+        throw new VisumException($"There is no standard time series with the number {timeSeriesNumber}!");
+    }
+
+    /// <summary>
+    /// Get a standard time series given the time series' number.
+    /// </summary>
+    /// <param name="timeSeriesNumber">The number of the standard time series to get.</param>
+    /// <param name="series">The series with the given time series number, null if not found.</param>
+    /// <returns>True if we found the time series, false otherwise.</returns>
+    public bool TryGetStandardTimeSeries(int timeSeriesNumber, [NotNullWhen(true)] out VisumStandardTimeSeries? series)
+    {
         _lock.EnterReadLock();
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            ITimeSeries? ret = _visum.Net.TimeSeriesCont.ItemByKey[timeSeriesNumber];
-            if (ret is null)
+            try
             {
-                throw new VisumException($"There is no standard time series with the number {timeSeriesNumber}!");
+                ITimeSeries? ret = _visum.Net.TimeSeriesCont.ItemByKey[timeSeriesNumber];
+                if (ret is not null)
+                {
+                    series = new VisumStandardTimeSeries(ret, this);
+                    return true;
+                }
             }
-            return new VisumStandardTimeSeries(ret, this);
+            catch
+            {
+
+            }
+            series = null;
+            return false;
+
         }
         finally
         {
@@ -151,18 +177,35 @@ public partial class VisumInstance
     /// <exception cref="VisumException">Thrown if there is no standard time series with the given name.</exception>
     public VisumStandardTimeSeries GetStandardTimeSeries(string name)
     {
+        if (TryGetStandardTimeSeries(name, out var ret))
+        {
+            return ret;
+        }
+        throw new VisumException($"There is no standard time series with the name {name}!");
+    }
+
+    /// <summary>
+    /// Get a standard time series given the time series' name.
+    /// </summary>
+    /// <param name="name">The name of the standard time series to find.</param>
+    /// <param name="series">The series with the given time series name. null if not found.</param>
+    /// <returns>True if we found the time series, false otherwise.</returns>
+    public bool TryGetStandardTimeSeries(string name, [NotNullWhen(true)] out VisumStandardTimeSeries? series)
+    {
         _lock.EnterReadLock();
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            foreach(ITimeSeries series in _visum.Net.TimeSeriesCont)
+            foreach (ITimeSeries s in _visum.Net.TimeSeriesCont)
             {
-                if (name.Equals((string)series.AttValue["Name"]))
+                if (name.Equals((string)s.AttValue["Name"]))
                 {
-                    return new VisumStandardTimeSeries(series, this);
+                    series = new VisumStandardTimeSeries(s, this);
+                    return true;
                 }
             }
-            throw new VisumException($"There is no standard time series with the name {name}!");
+            series = null;
+            return false;
         }
         finally
         {
