@@ -1,6 +1,7 @@
 ﻿// Ignore Spelling: Visum
 
 using TMG.Visum.TransitAssignment;
+using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -15,7 +16,7 @@ public partial class VisumInstance
     /// <returns>A list of matrices for the demand segment for each LoS to Generate.</returns>
     /// <exception cref="VisumException"></exception>
     public List<VisumMatrix> ExecuteTransitAssignment(VisumDemandSegment segment, IList<PutLoSTypes> loSToGenerate,
-        TransitAlgorithmParameters parameters)
+        TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
     {
         return ExecuteTransitAssignment(new VisumDemandSegment[] { segment }, loSToGenerate, parameters)[0];
     }
@@ -27,11 +28,46 @@ public partial class VisumInstance
     /// <returns>A list for each demand segment of all of the requested LoS matrices.</returns>
     /// <exception cref="VisumException"></exception>
     public List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate,
-        TransitAlgorithmParameters parameters) 
+        TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
     {
         CheckTransitAssignmentParameters(segments);
 
         _lock.EnterWriteLock();
+        try
+        {
+            UpdateSTSUSegmentSpeeds(stsuParmaters);
+            List<List<VisumMatrix>>? matrices = null;
+            for (int i = 0; i < iterations; i++)
+            {
+                // Only generate the LoS during the last iteration
+                matrices = ExecuteTransitAssignment(segments, 
+                    i < iterations - 1 ? Array.Empty<PutLoSTypes>() : loSToGenerate,
+                    parameters);
+                UpdateDwellTimes(stsuParmaters);
+            }
+            return matrices!;
+        }
+        finally 
+        { 
+            _lock.ExitWriteLock();
+        }
+    }
+
+    private void UpdateSTSUSegmentSpeeds(IList<STSUParameters>? stsuParmaters)
+    {
+        // TODO: Implement Updating the segment speeds
+        
+    }
+
+    private void UpdateDwellTimes(IList<STSUParameters>? stsuParmaters)
+    {
+        // TODO: Implement Updating the dwell times
+    }
+
+    
+
+    private List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate, TransitAlgorithmParameters parameters)
+    {
         string? tempFileName = null;
         try
         {
@@ -48,14 +84,14 @@ public partial class VisumInstance
                 writer.WriteAttributeString("DSEGSET", string.Join(',', segments.Select(seg => seg.Code)));
                 writer.WriteAttributeString("PUTASSIGNMENTVARIANT", parameters.VariantName);
                 parameters.Write(writer, loSToGenerate);
-                
+
                 // end PUTASSIGNMENTPARABASE
                 writer.WriteEndElement();
                 // end OPERATION
                 writer.WriteEndElement();
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXmlWithOptions(tempFileName);
+            _visum.Procedures.OpenXmlWithOptions(tempFileName, ResetFunctionsBeforeReading: false);
             _visum.Procedures.Execute();
             // Now double check that there were no errors.
             var ret = new List<List<VisumMatrix>>();
@@ -84,7 +120,6 @@ public partial class VisumInstance
         finally
         {
             Files.SafeDelete(tempFileName);
-            _lock.ExitWriteLock();
         }
     }
 

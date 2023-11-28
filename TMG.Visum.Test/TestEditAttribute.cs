@@ -8,7 +8,14 @@ public class TestEditAttribute
     public void EditAttribute()
     {
         using var instance = new VisumInstance("TestNetwork.ver");
-        instance.RunEditAttribute("123", "LINK", "LENGTH", false);
+        instance.ExecuteEditAttribute(
+            new EditAttributeParameters() 
+            { 
+                Formula = "123",
+                NetObjectType = "LINK",
+                ResultAttributeName = "LENGTH",
+                OnlyActive = false,
+            });
         // TODO: Figure out how to automatically detect an error.
         // instance.SaveVersionFile("out.ver");
     }

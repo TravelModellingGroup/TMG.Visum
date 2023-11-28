@@ -53,7 +53,7 @@ public partial class VisumInstance
     }
 
     [DoesNotReturn]
-    private void ThrowDemandTimeSeriesNotFound(string code)
+    private static void ThrowDemandTimeSeriesNotFound(string code)
     {
         throw new VisumException($"Unable to find a Demand Time Series with the code {code}!");
     }
@@ -178,11 +178,9 @@ public partial class VisumInstance
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
             IDemandTimeSeries? ret = _visum.Net.DemandTimeSeriesCont.ItemByKey[demandTimeSeriesNumber];
-            if (ret is null)
-            {
-                throw new VisumException($"There is no demand time series with the number {demandTimeSeriesNumber}!");
-            }
-            return new VisumDemandTimeSeries(ret, this);
+            return ret is null
+                ? throw new VisumException($"There is no demand time series with the number {demandTimeSeriesNumber}!")
+                : new VisumDemandTimeSeries(ret, this);
         }
         finally
         {

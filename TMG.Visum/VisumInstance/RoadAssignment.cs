@@ -41,7 +41,7 @@ public partial class VisumInstance
                 writer.WriteEndElement();
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXmlWithOptions(tempFileName);
+            _visum.Procedures.OpenXmlWithOptions(tempFileName, ResetFunctionsBeforeReading : false);
             _visum.Procedures.Execute();
             // Now double check that there were no errors.
 
