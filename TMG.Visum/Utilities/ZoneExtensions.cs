@@ -13,4 +13,26 @@ internal static class ZoneExtensions
         return (int)(double)zone.AttValue["No"];
     }
 
+    /// <summary>
+    /// Get the X coordinate for the zone.
+    /// </summary>
+    /// <param name="zone"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static double X(this IZone zone)
+    {
+        return (double)zone.AttValue["XCoord"];
+    }
+
+    /// <summary>
+    /// Get the Y coordinate for the zone.
+    /// </summary>
+    /// <param name="zone"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static double Y(this IZone zone)
+    {
+        return (double)zone.AttValue["YCoord"];
+    }
+
 }
