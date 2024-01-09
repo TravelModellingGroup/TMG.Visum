@@ -83,7 +83,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public string RunTimeLinkAttrId { get; init; } = "VCUR_PRTSYS(C)";
+    public string RunTimeLinkAttrId { get; init; } = "TCUR_PRTSYS(C)";
 
     /// <summary>
     /// 
@@ -98,7 +98,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public bool RunTimeGardOnlyActiveLinks { get; init; } = true;
+    public bool RunTimeGuardOnlyActiveLinks { get; init; } = true;
 
     /// <summary>
     /// 

@@ -32,7 +32,7 @@ public sealed class CalculateRoadLoS : IVisumTool
 
         public float Progress => 0f;
 
-        public Tuple<byte, byte, byte> ProgressColour => new(50,150,50);
+        public Tuple<byte, byte, byte> ProgressColour => new(50, 150, 50);
 
     }
 
@@ -46,15 +46,21 @@ public sealed class CalculateRoadLoS : IVisumTool
         {
             segment = GetSegment(instance);
             List<VisumMatrix> matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type).ToList());
-            for(int i =0; i < matrices.Count; i++)
+            for (int i = 0; i < matrices.Count; i++)
             {
                 if (!string.IsNullOrWhiteSpace(ToExport[i].MatrixCode))
                 {
                     matrices[i].Code = ToExport[i].MatrixCode;
                 }
-                if (!string.IsNullOrWhiteSpace(ToExport[i].MatrixName))
+                var newName = ToExport[i].MatrixName;
+                if (!string.IsNullOrWhiteSpace(newName))
                 {
-                    matrices[i].Name = ToExport[i].MatrixName;
+                    // Make sure there is only one matrix with the given name.
+                    if (!ToExport[i].Name.Equals(matrices[i].Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _ = instance.DeleteMatrixByName(newName);
+                        matrices[i].Name = newName;
+                    }
                 }
                 matrices[i].Dispose();
             }
@@ -76,13 +82,13 @@ public sealed class CalculateRoadLoS : IVisumTool
 
     public bool RuntimeValidation(ref string? error)
     {
-        return true;   
+        return true;
     }
 
     public string Name { get; set; } = null!;
 
     public float Progress => 0f;
 
-    public Tuple<byte, byte, byte> ProgressColour => new (50,150,50);
+    public Tuple<byte, byte, byte> ProgressColour => new(50, 150, 50);
 
 }

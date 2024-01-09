@@ -21,24 +21,35 @@ public partial class VisumInstance
         _lock.EnterWriteLock();
         try
         {
-            ObjectDisposedException.ThrowIf(_visum is null, this);
-            int maxNumber = 1;
-            foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
-            {
-                maxNumber = Math.Max(maxNumber, (int)(double)series.AttValue["no"]);
-            }
-            var timeSeries = _visum.Net.AddTimeSeries(maxNumber + 1, byMatrices ? TimeSeriesDomainType.DomainTypeMatrices
-                : TimeSeriesDomainType.DomainTypeShares);
-            var ret = new VisumStandardTimeSeries(timeSeries, this)
-            {
-                Name = name
-            };
-            return ret;
+            return CreateStandardTimeSeriesInner(name, byMatrices);
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+    }
+
+    /// <summary>
+    /// INTERNAL ONLY -- Must be called while holding a write lock!
+    /// </summary>
+    /// <param name="name">The name to assign to this time series</param>
+    /// <param name="byMatrices">Should be use Matrix Time Series, true, or Time series by percentage, false.</param>
+    /// <returns></returns>
+    internal VisumStandardTimeSeries CreateStandardTimeSeriesInner(string name, bool byMatrices)
+    {
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+        int maxNumber = 1;
+        foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
+        {
+            maxNumber = Math.Max(maxNumber, (int)(double)series.AttValue["no"]);
+        }
+        var timeSeries = _visum.Net.AddTimeSeries(maxNumber + 1, byMatrices ? TimeSeriesDomainType.DomainTypeMatrices
+            : TimeSeriesDomainType.DomainTypeShares);
+        var ret = new VisumStandardTimeSeries(timeSeries, this)
+        {
+            Name = name
+        };
+        return ret;
     }
 
     /// <summary>
@@ -73,22 +84,32 @@ public partial class VisumInstance
         _lock.EnterWriteLock();
         try
         {
-            ObjectDisposedException.ThrowIf(_visum is null, this);
-
-            foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
-            {
-                if (number == (int)(double)series.AttValue["no"])
-                {
-                    _visum.Net.RemoveTimeSeries(series);
-                    return true;
-                }
-            }
-            return false;
+            return RemoveStandardTimeSeriesInternal(number);
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+    }
+
+    /// <summary>
+    /// INTERNAL ONLY -- You must have a write lock before calling this!
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    internal bool RemoveStandardTimeSeriesInternal(int number)
+    {
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+
+        foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
+        {
+            if (number == series.GetNumber())
+            {
+                _visum.Net.RemoveTimeSeries(series);
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -105,7 +126,7 @@ public partial class VisumInstance
 
             foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
             {
-                if (name.Equals((string)series.AttValue["Name"]))
+                if (name.Equals(series.GetName()))
                 {
                     _visum.Net.RemoveTimeSeries(series);
                     return true;
@@ -138,6 +159,21 @@ public partial class VisumInstance
     /// Get a standard time series given the time series' number.
     /// </summary>
     /// <param name="timeSeriesNumber">The number of the standard time series to get.</param>
+    /// <returns>A reference to the standard time series.</returns>
+    /// <exception cref="VisumException">Thrown if there is no standard time series with the given number.</exception>
+    internal VisumStandardTimeSeries GetStandardTimeSeriesInternal(int timeSeriesNumber)
+    {
+        if (TryGetStandardTimeSeriesInternal(timeSeriesNumber, out var ret))
+        {
+            return ret;
+        }
+        throw new VisumException($"There is no standard time series with the number {timeSeriesNumber}!");
+    }
+
+    /// <summary>
+    /// Get a standard time series given the time series' number.
+    /// </summary>
+    /// <param name="timeSeriesNumber">The number of the standard time series to get.</param>
     /// <param name="series">The series with the given time series number, null if not found.</param>
     /// <returns>True if we found the time series, false otherwise.</returns>
     public bool TryGetStandardTimeSeries(int timeSeriesNumber, [NotNullWhen(true)] out VisumStandardTimeSeries? series)
@@ -145,28 +181,32 @@ public partial class VisumInstance
         _lock.EnterReadLock();
         try
         {
-            ObjectDisposedException.ThrowIf(_visum is null, this);
-            try
-            {
-                ITimeSeries? ret = _visum.Net.TimeSeriesCont.ItemByKey[timeSeriesNumber];
-                if (ret is not null)
-                {
-                    series = new VisumStandardTimeSeries(ret, this);
-                    return true;
-                }
-            }
-            catch
-            {
-
-            }
-            series = null;
-            return false;
-
+            return TryGetStandardTimeSeriesInternal(timeSeriesNumber, out series);
         }
         finally
         {
             _lock.ExitReadLock();
         }
+    }
+
+    /// <summary>
+    /// INTERANL ONLY - Must have read lock.
+    /// Get a standard time series given the time series' number.
+    /// </summary>
+    /// <param name="timeSeriesNumber">The number of the standard time series to get.</param>
+    /// <param name="series">The series with the given time series number, null if not found.</param>
+    /// <returns>True if we found the time series, false otherwise.</returns>
+    internal bool TryGetStandardTimeSeriesInternal(int timeSeriesNumber, [NotNullWhen(true)] out VisumStandardTimeSeries? series)
+    {
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+        ITimeSeries? ret = _visum.Net.TimeSeriesCont.ItemByKey[timeSeriesNumber];
+        if (ret is not null)
+        {
+            series = new VisumStandardTimeSeries(ret, this);
+            return true;
+        }
+        series = null;
+        return false;
     }
 
     /// <summary>
@@ -198,7 +238,7 @@ public partial class VisumInstance
             ObjectDisposedException.ThrowIf(_visum is null, this);
             foreach (ITimeSeries s in _visum.Net.TimeSeriesCont)
             {
-                if (name.Equals((string)s.AttValue["Name"]))
+                if (name.Equals(s.GetName()))
                 {
                     series = new VisumStandardTimeSeries(s, this);
                     return true;

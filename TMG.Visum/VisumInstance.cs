@@ -107,9 +107,9 @@ public sealed partial class VisumInstance : IDisposable
         {
             throw new VisumException($"{filePath} is an invalid file path to save a version file to.");
         }
+        _lock.EnterReadLock();
         try
         {
-            _lock.EnterReadLock();
             ObjectDisposedException.ThrowIf(_visum is null, this);   
             // Since people can use this to build a network from scratch if they want to
             // there is no reason to fore them to loading it from disk previously.

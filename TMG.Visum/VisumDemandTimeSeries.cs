@@ -74,6 +74,21 @@ public sealed class VisumDemandTimeSeries : IDisposable
         }
     }
 
+
+    /// <summary>
+    /// INERNAL ONLY - You must have a read or write lock before calling this!
+    /// </summary>
+    /// <returns>The StandardTimeSeries for this demand time series.</returns>
+    internal VisumStandardTimeSeries GetStandardTimeSeriesInternal()
+    {
+        var number = StandardTimeSeriesNumber;
+        if (_instance.Visum is not IVisum instance)
+        {
+            ThrowVisumDisposed();
+        }
+        return _instance.GetStandardTimeSeriesInternal(number);
+    }
+
     [DoesNotReturn]
     private static void ThrowVisumDisposed()
     {

@@ -10,13 +10,18 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     public IDataSource<VisumInstance> VisumInstance = null!;
 
     [SubModelInformation(Required = false, Description = "The source to load in planning districts per TAZ.")]
-    public IDataSource<SparseArray<int>>? PlanningDistricts;
+    public IDataSource<SparseArray<float>>? PlanningDistricts;
 
     [SubModelInformation(Required = false, Description = "The source to load in the regions per TAZ.")]
-    public IDataSource<SparseArray<int>>? Regions;
+    public IDataSource<SparseArray<float>>? Regions;
+
+    [SubModelInformation(Required = false, Description = "Load in a population for TAZ.")]
+    public IDataSource<SparseArray<float>>? Population;
 
     [SubModelInformation(Required = false, Description = "Load in a custom matrix to use for distances.")]
     public IDataSource<SparseTwinIndex<float>>? CustomDistances;
+
+
 
     public IZoneSystem? GiveData()
     {
@@ -39,7 +44,9 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
         LoadZones();
         LoadPlanningDistricts();
         LoadRegions();
+        LoadPopulation();
         Distances = LoadDistances();
+        SetIntrazonals();
     }
 
     /// <summary>
@@ -67,26 +74,46 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     /// </summary>
     private void LoadPlanningDistricts()
     {
-        if(PlanningDistricts is null || _zones is null)
+        if (PlanningDistricts is null || _zones is null)
         {
             return;
         }
 
-        if(!PlanningDistricts.Loaded)
+        if (!PlanningDistricts.Loaded)
         {
             PlanningDistricts.LoadData();
         }
         var pds = PlanningDistricts.GiveData()!;
         var flatZones = _zones.GetFlatData();
         var flatPds = pds.GetFlatData();
-        for (var i = 0;i < flatPds.Length;i++)
+        for (var i = 0; i < flatPds.Length; i++)
         {
             var sparseIndex = pds.GetSparseIndex(i);
             var index = _zones.GetFlatIndex(sparseIndex);
-            if(index >= 0)
+            if (index >= 0)
             {
-                ((Zone)flatZones[i]!).PlanningDistrict = flatPds[i];
+                ((Zone)flatZones[index]!).PlanningDistrict = (int)flatPds[i];
             }
+        }
+    }
+
+    private void SetIntrazonals()
+    {
+        if (Distances is null || _zones is null)
+        {
+            return;
+        }
+
+        var flatDistance = Distances.GetFlatData();
+        var flatZones = _zones.GetFlatData();
+        for (var i = 0; i < flatZones.Length; i++)
+        {
+            var intra = flatDistance[i][i];
+            var zone = ((Zone)flatZones[i]!);
+            zone.InternalDistance = intra;
+            // InternalDistance = (sqrt(Area) * 2) / 6
+            // (3 * InternalDistance)^2 = Area
+            zone.InternalArea = (intra * intra * 9);
         }
     }
 
@@ -114,7 +141,32 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
             var index = _zones.GetFlatIndex(sparseIndex);
             if (index >= 0)
             {
-                ((Zone)flatZones[i]!).RegionNumber = flatPds[i];
+                ((Zone)flatZones[index]!).RegionNumber = (int)flatPds[i];
+            }
+        }
+    }
+
+    public void LoadPopulation()
+    {
+        if (Population is null || _zones is null)
+        {
+            return;
+        }
+
+        if (!Population.Loaded)
+        {
+            Population.LoadData();
+        }
+        var population = Population.GiveData()!;
+        var flatZones = _zones.GetFlatData();
+        var flatPop = population.GetFlatData();
+        for (var i = 0; i < flatPop.Length; i++)
+        {
+            var sparseIndex = population.GetSparseIndex(i);
+            var index = _zones.GetFlatIndex(sparseIndex);
+            if (index >= 0)
+            {
+                ((Zone)flatZones[index]!).Population = (int)flatPop[i];
             }
         }
     }
@@ -127,7 +179,7 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     {
         if (CustomDistances is not null)
         {
-            if(!CustomDistances.Loaded)
+            if (!CustomDistances.Loaded)
             {
                 CustomDistances.LoadData();
             }
@@ -141,9 +193,9 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
             var flatDistances = distances.GetFlatData();
             var x = flatZones.Select(z => z!.X).ToArray();
             var y = flatZones.Select(z => z!.Y).ToArray();
-            for ( var i = 0; i < flatDistances.Length; i++)
-            {                       
-                for ( var j = 0; j < flatDistances[i].Length; j++)
+            for (var i = 0; i < flatDistances.Length; i++)
+            {
+                for (var j = 0; j < flatDistances[i].Length; j++)
                 {
                     var deltaX = x[i] - x[j];
                     var deltaY = y[i] - y[j];

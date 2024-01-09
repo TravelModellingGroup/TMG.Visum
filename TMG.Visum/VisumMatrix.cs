@@ -108,6 +108,11 @@ public sealed class VisumMatrix : IDisposable
     public int Columns => GetDimensions(_basedOn, _instance).columns;
 
     /// <summary>
+    /// Get the matrix's unique number
+    /// </summary>
+    public int Number => _matrix.GetNumber();
+
+    /// <summary>
     /// Gets the total sum of the matrix
     /// </summary>
     public double Sum() => _matrix.GetODSum();

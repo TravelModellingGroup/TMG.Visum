@@ -28,6 +28,11 @@ public sealed class STSUParameters
     public required float AutoCorrelation { get; init; }
 
     /// <summary>
+    /// 
+    /// </summary>
+    public required string AutoDemandSegment { get; init; }
+
+    /// <summary>
     /// The default speed for EROW's unless overridden.
     /// </summary>
     public required float DefaultEROWSpeed { get; init; }

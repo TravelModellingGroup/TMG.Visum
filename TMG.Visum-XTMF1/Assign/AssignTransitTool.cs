@@ -8,6 +8,9 @@ public sealed class AssignTransitTool : IVisumTool
     [SubModelInformation(Required = true, Description = "The demand segments to execute in the road assignment.")]
     public DemandSegmentForAssignment[] DemandSegments = null!;
 
+    [RunParameter("Auto Demand Segment", "C", "The demand segment that is used for STSU to base its times off of.")]
+    public string AutoDemandSegment = null!;
+
     [ModuleInformation(Description = "The level of service matrices to generate.")]
     public sealed class LosMatrix : IModule
     {
@@ -99,7 +102,7 @@ public sealed class AssignTransitTool : IVisumTool
     }
 
     [SubModelInformation(Required = false, Description = "The different surface transit speed updating classes.")]
-    public STSUClass[] STSU = null!;
+    public STSUClass[] SurfaceTransitSpeedUpdating = null!;
 
     public void Execute(VisumInstance instance)
     {
@@ -112,7 +115,7 @@ public sealed class AssignTransitTool : IVisumTool
             var matricesToGenerate = LoSToGenerate.Select(matrix => matrix.Type).ToList();
             var transitParameters = AssignmentAlgorithm.GetTransitParameters();
             processedMatrices = instance.ExecuteTransitAssignment(segments, matricesToGenerate, transitParameters, Iterations, stsuParameters);
-            RenameMatrices(processedMatrices);
+            RenameMatrices(processedMatrices, instance);
         }
         catch (VisumException e)
         {
@@ -148,12 +151,12 @@ public sealed class AssignTransitTool : IVisumTool
     /// <returns>The list of STSU parameters for the transit assignment.</returns>
     private IList<STSUParameters> GetSTSUParameters()
     {
-        if(STSU.Length == 0)
+        if(SurfaceTransitSpeedUpdating.Length == 0)
         {
             return Array.Empty<STSUParameters>();
         }
-        List<STSUParameters> stsuParameters = new (STSU.Length);
-        foreach(var stsu in STSU)
+        List<STSUParameters> stsuParameters = new (SurfaceTransitSpeedUpdating.Length);
+        foreach(var stsu in SurfaceTransitSpeedUpdating)
         {
             stsuParameters.Add(
                 new ()
@@ -163,6 +166,7 @@ public sealed class AssignTransitTool : IVisumTool
                     BoardingDuration = stsu.BoardingDuration,
                     DefaultEROWSpeed = stsu.DefaultEROWSpeed,
                     StopDuration = stsu.DefaultDuration,
+                    AutoDemandSegment = AutoDemandSegment,
                 });
         }
         return stsuParameters;
@@ -172,11 +176,20 @@ public sealed class AssignTransitTool : IVisumTool
     /// The matrices to rename using the LoSToGenerate.
     /// </summary>
     /// <param name="processedMatrices">The matrices to rename.</param>
-    private void RenameMatrices(List<List<VisumMatrix>>? processedMatrices)
+    private void RenameMatrices(List<List<VisumMatrix>>? processedMatrices, VisumInstance instance)
     {
         if (processedMatrices is null)
         {
             return;
+        }
+        void RemoveDuplicatesAndSetName(VisumMatrix matrix, string name)
+        {
+            // only update if the name is actually changed.
+            if (!name.Equals(matrix.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                _ = instance.DeleteMatrixByName(name);
+                matrix.Name = name;
+            }
         }
         // If it was a multi-class assignment we
         // are going to have to deal with adding the demand segment name
@@ -188,7 +201,7 @@ public sealed class AssignTransitTool : IVisumTool
                 {
                     if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixName))
                     {
-                        processedMatrices[i][j].Name = LoSToGenerate[j].MatrixName + " " + DemandSegments[i].Code;
+                        RemoveDuplicatesAndSetName(processedMatrices[i][j], LoSToGenerate[j].MatrixName + " " + DemandSegments[i].Code);
                     }
                     if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixCode))
                     {
@@ -203,7 +216,7 @@ public sealed class AssignTransitTool : IVisumTool
             {
                 if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixName))
                 {
-                    processedMatrices[0][j].Name = LoSToGenerate[j].MatrixName;
+                    RemoveDuplicatesAndSetName(processedMatrices[0][j], LoSToGenerate[j].MatrixName);
                 }
                 if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixCode))
                 {
