@@ -154,6 +154,18 @@ public sealed partial class VisumInstance : IDisposable
         return fileName;
     }
 
+    /// <summary>
+    /// Run the given procedures without wiping out the general settings.
+    /// Internal ONLY, you need to hold a write lock.
+    /// </summary>
+    /// <param name="fileName">The temporary file that we want to run.</param>
+    internal void RunProceduresFromFileInternal(string fileName)
+    {
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+        _visum.Procedures.OpenXmlWithOptions(fileName, ReadFunctions: false, ResetFunctionsBeforeReading: false);
+        _visum.Procedures.Execute();
+    }
+
     #region IDispose
 
     private bool disposedValue;

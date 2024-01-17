@@ -64,8 +64,7 @@ public partial class VisumInstance
                 writer.WriteEndElement();
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXmlWithOptions(tempFileName, ResetFunctionsBeforeReading: false);
-            _visum.Procedures.Execute();
+            RunProceduresFromFileInternal(tempFileName);
             var ret = new List<VisumMatrix>();
             foreach (var type in types)
             {
