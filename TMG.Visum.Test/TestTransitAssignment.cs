@@ -32,7 +32,7 @@ public class TestTransitAssignment
     }
 
     [TestMethod]
-    public void TestWSPTransitAssignment()
+    public void TestTransitAssignmentWithMultipleDays()
     {
         //using var instance = new VisumInstance(@"Z:\Projects\2023\Halifax\V4Input\BaseNetwork.ver");
         using var instance = new VisumInstance(@"TestNetwork-Calendar.ver");
@@ -57,6 +57,37 @@ public class TestTransitAssignment
                     AssignmentStartTime = TimeOnly.Parse("17:00:00"),
                     AssignmentEndTime = TimeOnly.Parse("18:00:00")
                 });
+            DisposeMatrices(matrices);
+        }
+        finally
+        {
+            instance.SaveVersionFile("Temp.ver");
+        }
+    }
+
+
+    [TestMethod]
+    public void TestGetLineBoardings()
+    {
+        using var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSegment = instance.GetDemandSegment("X");
+            using var transitDemand = instance.CreateDemandMatrix(1, "X demand");
+            // Assign 3 demand for all OD.
+            transitDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
+            transitSegment.DemandMatrix = transitDemand;
+            var matrices = instance.ExecuteTransitAssignment(transitSegment,
+                new PutLoSTypes[]
+                {
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
+                },
+                new HeadwayImpedanceParameters());
+            var boardings = instance.GetBoardings();
+            Assert.IsNotNull(boardings);
+            Assert.AreEqual(1, boardings.Count);
+            Assert.IsTrue(boardings.Sum(line => line.boardings) > 0);
             DisposeMatrices(matrices);
         }
         finally
