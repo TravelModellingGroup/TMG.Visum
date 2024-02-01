@@ -57,13 +57,13 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
 
     public float WalkTimeValue { get; init; } = 1.0f;
 
-    public int AssignmentStartDayIndex { get; init; } = 1;
+    override public int AssignmentStartDayIndex { get; init; } = 1;
 
-    public TimeOnly AssignmentStartTime { get; init; } = TimeOnly.Parse("00:00:00");
+    override public TimeOnly AssignmentStartTime { get; init; } = TimeOnly.Parse("00:00:00");
 
-    public int AssignmentEndDayIndex { get; init; } = 2;
+    override public int AssignmentEndDayIndex { get; init; } = 2;
 
-    public TimeOnly AssignmentEndTime { get; init; } = TimeOnly.Parse("00:00:00");
+    override public TimeOnly AssignmentEndTime { get; init; } = TimeOnly.Parse("00:00:00");
 
     public bool RemoveDominatedPaths { get; init; } = true;
 

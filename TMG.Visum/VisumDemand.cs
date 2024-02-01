@@ -114,6 +114,18 @@ public sealed class VisumDemandSegment : IDisposable
     }
 
     /// <summary>
+    /// INERNAL ONLY - You must have a read or write lock before calling this!
+    /// </summary>
+    /// <returns>The DemandTimeSeries for this demand segment.</returns>
+    internal VisumDemandTimeSeries GetDemandTimeSeriesInternal()
+    {
+        ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
+        var description = _segment.GetDemandDescription();
+        var timeSeriesNumber = (int)(double)description.AttValue["DemandTimeSeriesNo"];
+        return _instance.GetDemandTimeSeriesInternal(timeSeriesNumber);
+    }
+
+    /// <summary>
     /// Get or set the associated mode for this demand segment.
     /// </summary>
     public VisumMode Mode

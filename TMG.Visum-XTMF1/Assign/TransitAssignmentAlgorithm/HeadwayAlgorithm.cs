@@ -92,6 +92,7 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
             TransferWaitTimeValue = TransferWaitTimeValue,
             TransferWaitTimeWeightAttribute = TransferWaitTimeWeightAttribute,
             ShareLowerBounds = ShareLowerBounds,
+            WalkTimeValue = WalkTimeValue,
         };
     }
 }

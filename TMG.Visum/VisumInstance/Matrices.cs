@@ -100,7 +100,7 @@ public partial class VisumInstance : IDisposable
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            if(!TryGetMatrixInner(name, out var localMatrix))
+            if (!TryGetMatrixInner(name, out var localMatrix))
             {
                 matrix = null;
                 return false;
@@ -239,13 +239,7 @@ public partial class VisumInstance : IDisposable
         _lock.EnterWriteLock();
         try
         {
-            ObjectDisposedException.ThrowIf(_visum is null, this);
-            if (TryGetMatrixInner(number, out var matrix))
-            {
-                _visum.Net.RemoveMatrix(matrix);
-                return true;
-            }
-            return false;
+            return DeleteMatrixInner(number);
         }
         catch (Exception ex)
         {
@@ -255,5 +249,123 @@ public partial class VisumInstance : IDisposable
         {
             _lock.ExitWriteLock();
         }
+    }
+
+    /// <summary>
+    /// Delete the given matrix number.
+    /// ONLY CALL FROM INTERNAL WHEN HOLDING A WRITE LOCK
+    /// </summary>
+    /// <param name="number">The matrix number to delete.</param>
+    /// <exception cref="VisumException">
+    /// Thrown if the Visum instance has already been disposed.
+    /// </exception>
+    internal bool DeleteMatrixInner(int number)
+    {
+        if (TryGetMatrixInner(number, out var matrix))
+        {
+            _visum?.Net.RemoveMatrix(matrix);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Delete the matrices with the given code
+    /// </summary>
+    /// <param name="number">The code to delete.</param>
+    /// <exception cref="VisumException">
+    /// Thrown if the Visum instance has already been disposed.
+    /// </exception>
+    public bool DeleteMatrixByCode(string code)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            return DeleteMatrixByCodeInner(code);
+        }
+        catch (Exception ex)
+        {
+            throw new VisumException(ex);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    /// <summary>
+    /// Remove all instances of matrices with the given code.
+    /// </summary>
+    /// <param name="code">The code to remove.</param>
+    /// <returns>True if at least one matrix was removed.</returns>
+    internal bool DeleteMatrixByCodeInner(string code)
+    {
+        if(_visum is null)
+        {
+            return false;
+        }
+        var toRemove = new List<IMatrix>();
+        foreach(IMatrix matrix in _visum.Net.Matrices)
+        {
+            if(matrix.GetCode().Equals(code, StringComparison.OrdinalIgnoreCase))
+            {
+                toRemove.Add(matrix);
+            }
+        }
+        foreach( var matrix in toRemove)
+        {
+            _visum.Net.RemoveMatrix(matrix);
+        }
+        return toRemove.Count > 0;
+    }
+
+    /// <summary>
+    /// Delete the matrices with the given name.
+    /// </summary>
+    /// <param name="number">The name to delete.</param>
+    /// <exception cref="VisumException">
+    /// Thrown if the Visum instance has already been disposed.
+    /// </exception>
+    public bool DeleteMatrixByName(string name)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            return DeleteMatrixByNameInner(name);
+        }
+        catch (Exception ex)
+        {
+            throw new VisumException(ex);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    /// <summary>
+    /// Remove all instances of matrices with the given name.
+    /// </summary>
+    /// <param name="name">The name to remove.</param>
+    /// <returns>True if at least one matrix was removed.</returns>
+    internal bool DeleteMatrixByNameInner(string name)
+    {
+        if (_visum is null)
+        {
+            return false;
+        }
+        var toRemove = new List<IMatrix>();
+        foreach (IMatrix matrix in _visum.Net.Matrices)
+        {
+            if (matrix.GetName().Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                toRemove.Add(matrix);
+            }
+        }
+        foreach (var matrix in toRemove)
+        {
+            _visum.Net.RemoveMatrix(matrix);
+        }
+        return toRemove.Count > 0;
     }
 }

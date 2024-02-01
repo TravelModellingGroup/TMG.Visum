@@ -19,8 +19,20 @@ public sealed class EditAttribute : IVisumTool
 
     public void Execute(VisumInstance visumInstance)
     {
-        visumInstance.RunEditAttribute(Formula,
-            NetObjectType, ResultAttributeName, OnlyActive);
+        try
+        {
+            visumInstance.ExecuteEditAttribute(new EditAttributeParameters()
+            {
+                Formula = Formula,
+                NetObjectType = NetObjectType,
+                ResultAttributeName = ResultAttributeName,
+                OnlyActive = OnlyActive,
+            });
+        }
+        catch (VisumException e)
+        {
+            throw new XTMFRuntimeException(this, e);
+        }
     }
 
     public bool RuntimeValidation(ref string? error)

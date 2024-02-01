@@ -8,6 +8,9 @@ public sealed class AssignTransitTool : IVisumTool
     [SubModelInformation(Required = true, Description = "The demand segments to execute in the road assignment.")]
     public DemandSegmentForAssignment[] DemandSegments = null!;
 
+    [RunParameter("Auto Demand Segment", "C", "The demand segment that is used for STSU to base its times off of.")]
+    public string AutoDemandSegment = null!;
+
     [ModuleInformation(Description = "The level of service matrices to generate.")]
     public sealed class LosMatrix : IModule
     {
@@ -39,17 +42,80 @@ public sealed class AssignTransitTool : IVisumTool
     [SubModelInformation(Required = true, Description = "The algorithm to use for the transit assignment.")]
     public TransitAssignmentAlgorithmModule AssignmentAlgorithm = null!;
 
+    [RunParameter("Iterations", 1, "The number of times to execute the transit assignment, used for Surface-Transit Speed Updating.")]
+    public int Iterations;
+
+    [ModuleInformation(Description = "A module that describes how to update the speed of")]
+    public class STSUClass : IModule
+    {
+        [RunParameter("Boarding Duration", 1.9577, "The boarding duration in seconds per passenger to apply.")]
+        public float BoardingDuration;
+
+        [RunParameter("Alighting Duration", 1.1219, "The alighting duration in seconds per passenger to apply.")]
+        public float AlightingDuration;
+
+        [RunParameter("Default Duration", 7.4331, "The default duration in seconds per stop to apply.")]
+        public float DefaultDuration;
+
+        [RunParameter("Transit Auto Correlation", 1, "The multiplier to auto time to use to find transit time.")]
+        public float Correlation;
+
+        [RunParameter("Default EROW Speed", 20.0f, "The speed that transit lines will travel at that belong to this STSU Class.")]
+        public float DefaultEROWSpeed;
+
+        [RunParameter("Mode Filter Expression", "bpgq", "The modes that will get surface transit speed updating applied to them. To select all lines, leave this and the line filter blank")]
+        public string ModeFilterExpression = null!;
+
+        [RunParameter("Line Filter Expression", "line = ______ xor line = GT____ xor line = TS____ xor line = T5____", "The line filter that will be used to determining which lines will get surface transit speed applied to them. To select all lines, leave this and the line filter blank")]
+        public string LineFilterExpression = null!;
+
+        public bool RuntimeValidation(ref string? error)
+        {
+            if (DefaultEROWSpeed <= 0)
+            {
+                error = "The Default EROW Speed needs to be greater than zero!";
+                return false;
+            }
+            if (DefaultDuration < 0)
+            {
+                error = "The Default Duration needs to be at least than zero!";
+                return false;
+            }
+            if (BoardingDuration < 0)
+            {
+                error = "The Boarding Duration needs to be at least than zero!";
+                return false;
+            }
+            if (AlightingDuration < 0)
+            {
+                error = "The Alighting Duration needs to be at least than zero!";
+                return false;
+            }
+            return true;
+        }
+
+        public string Name { get; set; } = null!;
+
+        public float Progress => 0f;
+
+        public Tuple<byte, byte, byte> ProgressColour => new(50, 150, 50);
+    }
+
+    [SubModelInformation(Required = false, Description = "The different surface transit speed updating classes.")]
+    public STSUClass[] SurfaceTransitSpeedUpdating = null!;
+
     public void Execute(VisumInstance instance)
     {
         List<VisumDemandSegment>? segments = null;
         List<List<VisumMatrix>>? processedMatrices = null;
+        var stsuParameters = GetSTSUParameters();
         try
         {
             segments = GetDemandSegments(instance);
             var matricesToGenerate = LoSToGenerate.Select(matrix => matrix.Type).ToList();
             var transitParameters = AssignmentAlgorithm.GetTransitParameters();
-            processedMatrices = instance.ExecuteTransitAssignment(segments, matricesToGenerate, transitParameters);
-            RenameMatrices(processedMatrices);
+            processedMatrices = instance.ExecuteTransitAssignment(segments, matricesToGenerate, transitParameters, Iterations, stsuParameters);
+            RenameMatrices(processedMatrices, instance);
         }
         catch (VisumException e)
         {
@@ -80,16 +146,52 @@ public sealed class AssignTransitTool : IVisumTool
     }
 
     /// <summary>
+    /// Get the list of STSU parameters to apply.
+    /// </summary>
+    /// <returns>The list of STSU parameters for the transit assignment.</returns>
+    private IList<STSUParameters> GetSTSUParameters()
+    {
+        if(SurfaceTransitSpeedUpdating.Length == 0)
+        {
+            return Array.Empty<STSUParameters>();
+        }
+        List<STSUParameters> stsuParameters = new (SurfaceTransitSpeedUpdating.Length);
+        foreach(var stsu in SurfaceTransitSpeedUpdating)
+        {
+            stsuParameters.Add(
+                new ()
+                { 
+                    AlightingDuration = stsu.AlightingDuration,
+                    AutoCorrelation = stsu.Correlation,
+                    BoardingDuration = stsu.BoardingDuration,
+                    DefaultEROWSpeed = stsu.DefaultEROWSpeed,
+                    StopDuration = stsu.DefaultDuration,
+                    AutoDemandSegment = AutoDemandSegment,
+                });
+        }
+        return stsuParameters;
+    }
+
+    /// <summary>
     /// The matrices to rename using the LoSToGenerate.
     /// </summary>
     /// <param name="processedMatrices">The matrices to rename.</param>
-    private void RenameMatrices(List<List<VisumMatrix>>? processedMatrices)
+    private void RenameMatrices(List<List<VisumMatrix>>? processedMatrices, VisumInstance instance)
     {
         if (processedMatrices is null)
         {
             return;
         }
-        // If it was a multiclass assignment we
+        void RemoveDuplicatesAndSetName(VisumMatrix matrix, string name)
+        {
+            // only update if the name is actually changed.
+            if (!name.Equals(matrix.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                _ = instance.DeleteMatrixByName(name);
+                matrix.Name = name;
+            }
+        }
+        // If it was a multi-class assignment we
         // are going to have to deal with adding the demand segment name
         if (DemandSegments.Length > 1)
         {
@@ -99,7 +201,7 @@ public sealed class AssignTransitTool : IVisumTool
                 {
                     if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixName))
                     {
-                        processedMatrices[i][j].Name = LoSToGenerate[j].MatrixName + " " + DemandSegments[i].Code;
+                        RemoveDuplicatesAndSetName(processedMatrices[i][j], LoSToGenerate[j].MatrixName + " " + DemandSegments[i].Code);
                     }
                     if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixCode))
                     {
@@ -114,7 +216,7 @@ public sealed class AssignTransitTool : IVisumTool
             {
                 if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixName))
                 {
-                    processedMatrices[0][j].Name = LoSToGenerate[j].MatrixName;
+                    RemoveDuplicatesAndSetName(processedMatrices[0][j], LoSToGenerate[j].MatrixName);
                 }
                 if (!string.IsNullOrWhiteSpace(LoSToGenerate[j].MatrixCode))
                 {

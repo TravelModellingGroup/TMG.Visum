@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: Visum
 
+using CommunityToolkit.HighPerformance;
 using TMG.Visum.TransitAssignment;
 
 namespace TMG.Visum;
@@ -15,7 +16,7 @@ public partial class VisumInstance
     /// <returns>A list of matrices for the demand segment for each LoS to Generate.</returns>
     /// <exception cref="VisumException"></exception>
     public List<VisumMatrix> ExecuteTransitAssignment(VisumDemandSegment segment, IList<PutLoSTypes> loSToGenerate,
-        TransitAlgorithmParameters parameters)
+        TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
     {
         return ExecuteTransitAssignment(new VisumDemandSegment[] { segment }, loSToGenerate, parameters)[0];
     }
@@ -27,15 +28,139 @@ public partial class VisumInstance
     /// <returns>A list for each demand segment of all of the requested LoS matrices.</returns>
     /// <exception cref="VisumException"></exception>
     public List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate,
-        TransitAlgorithmParameters parameters) 
+        TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
     {
         CheckTransitAssignmentParameters(segments);
 
         _lock.EnterWriteLock();
+        VisumStandardTimeSeries? tempTimeSeries = null;
+        try
+        {
+            tempTimeSeries = SetupTempTimeSeries(segments, parameters);
+            UpdateSTSUSegmentSpeeds(stsuParmaters);
+            List<List<VisumMatrix>>? matrices = null;
+            for (int i = 0; i < iterations; i++)
+            {
+                // Only generate the LoS during the last iteration
+                matrices = ExecuteTransitAssignment(segments,
+                    i < iterations - 1 ? Array.Empty<PutLoSTypes>() : loSToGenerate,
+                    parameters);
+                UpdateDwellTimes(stsuParmaters);
+            }
+            return matrices!;
+        }
+        finally
+        {
+            // clean-up the temporary time series
+            if (tempTimeSeries is not null)
+            {
+                // TODO: Ignore this for now.
+                // var number = tempTimeSeries.Number;
+                // tempTimeSeries.Dispose();
+                // RemoveStandardTimeSeriesInternal(number);
+            }
+            _lock.ExitWriteLock();
+        }
+    }
+
+    private VisumStandardTimeSeries SetupTempTimeSeries(IList<VisumDemandSegment> segments, TransitAlgorithmParameters parameters)
+    {
+        // Create a new Time Series
+        var tempTimeSeries = CreateStandardTimeSeriesInner("TempForTransitAssignment", false);
+        var number = tempTimeSeries.Number;
+
+        static int GetTime(int date, TimeOnly time)
+        {
+            return (date - 1) * 24 * 60 * 60 + time.Hour * 60 * 60 + time.Minute * 60 + time.Second;
+        }
+
+        var item = tempTimeSeries
+            .GetWrappedObject()
+            .AddTimeSeriesItem(GetTime(parameters.AssignmentStartDayIndex, parameters.AssignmentStartTime),
+                               GetTime(parameters.AssignmentEndDayIndex, parameters.AssignmentEndTime));
+        item.SetWeight(100.0);
+        // Point all of the segments to the time series
+        foreach (var segment in segments)
+        {
+            using var demandTimeSeries = segment.GetDemandTimeSeriesInternal();
+            demandTimeSeries.StandardTimeSeriesNumber = number;
+        }
+        return tempTimeSeries;
+    }
+
+    private void UpdateSTSUSegmentSpeeds(IList<STSUParameters>? stsuParmaters)
+    {
+        if (stsuParmaters is null || stsuParmaters.Count <= 0)
+        {
+            return;
+        }
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+        var filter = _visum.Filters.LineGroupFilter().TimeProfileItemFilter();
+
+        foreach (var parameter in stsuParmaters)
+        {
+
+        }
+        filter.UseFilter = true;
+        var linkTimeAttribute = $"TCUR_PRTSYS({stsuParmaters[0].AutoDemandSegment})";
+        // Update the 
+        foreach (ITimeProfile timeProfile in _visum.Net.TimeProfiles)
+        {
+            // Find the stsuParameter to use for this time profile
+            int index = -1;
+            if (index >= 0)
+            {
+                var autoCorrelation = stsuParmaters[index].AutoCorrelation;
+                foreach (ITimeProfileItem item in timeProfile.TimeProfileItems)
+                {
+                    if (!item.Active)
+                    {
+                        continue;
+                    }
+                    double segmentTime = (double)(((ILink)item.LineRouteItem.AttValue["INLINK"]).AttValue[linkTimeAttribute]) * autoCorrelation;
+                    item.AttValue["ADDVALUE"] = segmentTime;
+                }
+                timeProfile.Active = true;
+            }
+            else
+            {
+                timeProfile.Active = false;
+            }
+        }
+
+        // Step 2: Assign the updated run-times
+        ExecuteSetRunAndDwellTimesInternal(new SetRunAndDwellTimeParameters()
+        {
+            AddValues = false,
+            UpdateRunTime = true,
+            RunTimeLinkFactor = 1.0f,
+            RunTimeLinkAttrId = $"AddValue",
+            RunTimeGuardOnlyActiveLinks = true,
+        });
+
+
+    }
+
+    private void UpdateDwellTimes(IList<STSUParameters>? stsuParmaters)
+    {
+        if (stsuParmaters is null)
+        {
+            return;
+        }
+
+        foreach (var parameters in stsuParmaters)
+        {
+
+        }
+    }
+
+    private List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate, TransitAlgorithmParameters parameters)
+    {
         string? tempFileName = null;
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
+            ClearPreviousSkims(segments, loSToGenerate);
             tempFileName = WriteProcedure((writer) =>
             {
                 writer.WriteStartElement("OPERATION");
@@ -48,16 +173,15 @@ public partial class VisumInstance
                 writer.WriteAttributeString("DSEGSET", string.Join(',', segments.Select(seg => seg.Code)));
                 writer.WriteAttributeString("PUTASSIGNMENTVARIANT", parameters.VariantName);
                 parameters.Write(writer, loSToGenerate);
-                
+
                 // end PUTASSIGNMENTPARABASE
                 writer.WriteEndElement();
                 // end OPERATION
                 writer.WriteEndElement();
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXmlWithOptions(tempFileName);
-            _visum.Procedures.Execute();
-            // Now double check that there were no errors.
+            RunProceduresFromFileInternal(tempFileName);
+            // Get the matrices that were returned
             var ret = new List<List<VisumMatrix>>();
             foreach (var demandSegment in segments)
             {
@@ -84,7 +208,23 @@ public partial class VisumInstance
         finally
         {
             Files.SafeDelete(tempFileName);
-            _lock.ExitWriteLock();
+        }
+    }
+
+    private void ClearPreviousSkims(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate)
+    {
+        foreach (var demandSegment in segments)
+        {
+            var segmentMatrices = new List<VisumMatrix>();
+            foreach (var loSType in loSToGenerate)
+            {
+                var matrixName = loSType.GetMatrixName(demandSegment);
+                if (TryGetMatrixInner(matrixName, out var matrix))
+                {
+                    int number = matrix.GetNumber();
+                    DeleteMatrixInner(number);
+                }
+            }
         }
     }
 
@@ -94,7 +234,7 @@ public partial class VisumInstance
         {
             throw new VisumException("There were no demand segments defined!");
         }
-        if(segments.FirstOrDefault(seg => seg.DemandMatrix is null) is VisumDemandSegment noMatrix)
+        if (segments.FirstOrDefault(seg => seg.DemandMatrix is null) is VisumDemandSegment noMatrix)
         {
             throw new VisumException($"The demand segment {noMatrix.Name} was not initialized with a demand matrix for assignment!");
         }

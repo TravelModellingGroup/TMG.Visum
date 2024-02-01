@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: Visum
 using TMG.Visum.RoadAssignment;
+using VISUMLIB;
 namespace TMG.Visum;
 
 public partial class VisumInstance
@@ -17,6 +18,7 @@ public partial class VisumInstance
         {
             _lock.EnterWriteLock();
             ObjectDisposedException.ThrowIf(_visum is null, this);
+            ClearMatrices(segment, types);
             tempFileName = WriteProcedure((writer) =>
             {
                 /*
@@ -48,7 +50,7 @@ public partial class VisumInstance
                 writer.WriteAttributeString("WEIGHTING", "Route Vol Avg");
 
                 // Specify the particular matrix to compute
-                foreach(var type in types)
+                foreach (var type in types)
                 {
                     writer.WriteStartElement("SINGLESKIMMATRIXPARA");
                     writer.WriteAttributeString("CALCULATE", "1");
@@ -62,10 +64,9 @@ public partial class VisumInstance
                 writer.WriteEndElement();
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXmlWithOptions(tempFileName);
-            _visum.Procedures.Execute();
+            RunProceduresFromFileInternal(tempFileName);
             var ret = new List<VisumMatrix>();
-            foreach(var type in types)
+            foreach (var type in types)
             {
                 ret.Add(GetMatrixByNameInner(type.GetMatrixName(segment)));
             }
@@ -79,6 +80,15 @@ public partial class VisumInstance
         {
             Files.SafeDelete(tempFileName);
             _lock.ExitWriteLock();
+        }
+    }
+
+    private void ClearMatrices(VisumDemandSegment segment, List<PrTLosTypes> types)
+    {
+        foreach (var type in types)
+        {
+            // We can ignore the result because it is fine if nothing was removed.
+            _ = DeleteMatrixByNameInner(type.GetMatrixName(segment));
         }
     }
 

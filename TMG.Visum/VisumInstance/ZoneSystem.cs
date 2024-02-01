@@ -22,6 +22,25 @@ public partial class VisumInstance
     }
 
     /// <summary>
+    /// Gets all of the zone numbers, x coordinates and y-coordinates
+    /// </summary>
+    /// <returns>An array of all of the zone numbers in order.</returns>
+    public (int[] zoneNumber, float[] x, float[] y) GetZoneInformation()
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            ObjectDisposedException.ThrowIf(_visum is null, this);
+            var zoneContainer = _visum.Net.Zones;
+            return zoneContainer.GetZoneInformation();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    /// <summary>
     /// Get the total number of zones in the network.
     /// </summary>
     /// <returns>The total number of zones.</returns>

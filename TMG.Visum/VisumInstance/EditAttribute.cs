@@ -2,16 +2,32 @@
 
 public partial class VisumInstance
 {
+
     /// <summary>
     /// Execute an EditAttribute command
     /// </summary>
-    /// <param name="formula">The formula to apply.</param>
-    /// <param name="netObjectType">The network object type name to assign to.</param>
-    /// <param name="resultAttributeName">The attribute name to assign to.</param>
-    /// <param name="onlyActive">Should we only edit actively selected objects?</param>
-    public void RunEditAttribute(string formula, string netObjectType, string resultAttributeName, bool onlyActive)
+    /// <param name="parameters">The parameters required to run an edit attribute.</param>
+    public void ExecuteEditAttribute(EditAttributeParameters parameters)
     {
         _lock.EnterWriteLock();
+        try
+        {
+            ExecuteEditAttributeInternal(parameters);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    /// <summary>
+    /// Execute an EditAttribute command
+    /// INTERNAL ONLY- Must have write lock before calling.
+    /// </summary>
+    /// <param name="parameters"></param>
+    /// <exception cref="VisumException"></exception>
+    internal void ExecuteEditAttributeInternal(EditAttributeParameters parameters)
+    {
         string? tempFileName = null;
         try
         {
@@ -26,18 +42,17 @@ public partial class VisumInstance
 
                 writer.WriteStartElement("ATTRIBUTEFORMULAPARA");
 
-                writer.WriteAttributeString("FORMULA", formula);
+                writer.WriteAttributeString("FORMULA", parameters.Formula);
                 writer.WriteAttributeString("INCLUDESUBCATEGORIES", "0");
-                writer.WriteAttributeString("NETOBJECTTYPE", netObjectType);
-                writer.WriteAttributeString("ONLYACTIVE", onlyActive ? "1" : "0");
-                writer.WriteAttributeString("RESULTATTRNAME", resultAttributeName);
+                writer.WriteAttributeString("NETOBJECTTYPE", parameters.NetObjectType);
+                writer.WriteAttributeString("ONLYACTIVE", parameters.OnlyActive ? "1" : "0");
+                writer.WriteAttributeString("RESULTATTRNAME", parameters.ResultAttributeName);
 
                 // end ATTRIBUTEFORMULAPARA
                 writer.WriteEndElement();
             });
             // Wipe out the previous procedures and run this.
-            _visum.Procedures.OpenXmlWithOptions(tempFileName);
-            _visum.Procedures.Execute();
+            RunProceduresFromFileInternal(tempFileName);
         }
         catch (VisumException)
         {
@@ -51,7 +66,6 @@ public partial class VisumInstance
         finally
         {
             Files.SafeDelete(tempFileName);
-            _lock.ExitWriteLock();
         }
     }
 }

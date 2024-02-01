@@ -12,6 +12,14 @@ public abstract class TransitAlgorithmParameters
     /// </summary>
     internal abstract string VariantName { get; }
 
+    public abstract int AssignmentStartDayIndex { get; init; }
+
+    public abstract int AssignmentEndDayIndex { get; init; }
+
+    public abstract TimeOnly AssignmentStartTime { get; init; }
+
+    public abstract TimeOnly AssignmentEndTime { get; init; }
+
     /// <summary>
     /// Write the parameters for the particular type of transit assignment.
     /// </summary>

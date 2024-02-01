@@ -118,4 +118,5 @@ public class VisumStandardTimeSeries : IDisposable
     {
         return _timeSeries;
     }
+
 }
