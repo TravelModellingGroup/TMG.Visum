@@ -9,8 +9,15 @@ public sealed class ExportLineBoardings : IVisumTool
 
     public void Execute(VisumInstance visumInstance)
     {
-        var boardings = visumInstance.GetBoardings();
-
+        List<(string lineName, float boardings)> boardings;
+        try
+        {
+             boardings = visumInstance.GetBoardings();
+        }
+        catch(VisumException e)
+        {
+            throw new XTMFRuntimeException(this, e);
+        }
         using var writer = new StreamWriter(SaveTo);
         writer.WriteLine("LineName,Boardings");
         foreach(var boarding in boardings)
