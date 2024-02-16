@@ -59,13 +59,21 @@ public sealed class VisumDemandSegment : IDisposable
         {
             if (_instance.Visum is IVisum instance)
             {
-                return new VisumMatrix(_segment.get_ODMatrix(), ObjectTypeRefT.OBJECTTYPEREF_ZONE, instance);
+                try
+                {
+                    var matrix = _segment.get_ODMatrix();
+                    return new VisumMatrix(matrix, ObjectTypeRefT.OBJECTTYPEREF_ZONE, instance);
+                }
+                catch
+                {
+                    return null;
+                }
             }
             throw new VisumException("The Visum instance was already disposed.");
         }
         set
         {
-            _segment.set_ODMatrix(value?.Matrix ?? null);
+            _segment.set_ODMatrix(value?.Matrix);
         }
     }
 

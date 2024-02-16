@@ -36,15 +36,20 @@ public sealed partial class AssignRoadTool : IVisumTool
         }
         finally
         {
-            // Release the variables.
-            if (segments is not null)
+            try
             {
-                for (int i = 0; i < segments.Count; i++)
+                // Release the variables.
+                if (segments is not null)
                 {
-                    segments[i]?.DemandMatrix?.Dispose();
-                    segments[i].Dispose();
+                    for (int i = 0; i < segments.Count; i++)
+                    {
+                        segments[i]?.DemandMatrix?.Dispose();
+                        segments[i].Dispose();
+                    }
                 }
             }
+            catch // Kill all errors within the finally
+            { }
         }
     }
 
@@ -61,7 +66,9 @@ public sealed partial class AssignRoadTool : IVisumTool
             .Select(segment =>
             {
                 var s = instance.GetDemandSegment(segment.Code);
-                s.DemandMatrix = instance.GetMatrixByName(segment.DemandMatrix);
+                var matrix = instance.GetMatrixByName(segment.DemandMatrix);
+                matrix.SetAsDemandMatrix();
+                s.DemandMatrix = matrix;
                 return s;
             })
             .ToList();

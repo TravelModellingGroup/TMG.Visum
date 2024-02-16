@@ -28,6 +28,7 @@ public sealed class ImportMatrixToVisum : ISelfContainedModule
             else
             {
                 matrix.Name = MatrixName;
+                matrix.SetAsDemandMatrix();
             }
             matrix.SetValues(GetMatrix());
         }
