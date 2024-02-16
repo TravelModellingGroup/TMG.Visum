@@ -62,6 +62,14 @@ public sealed class VisumMatrix : IDisposable
         return (count, count);
     }
 
+    /// <summary>
+    /// Set the matrix to be for demand data.
+    /// </summary>
+    public void SetAsDemandMatrix()
+    {
+        _matrix.SetMatrixType(MatrixType.MATRIXTYPE_DEMAND);
+    }
+
     public int[] GetSparseIndexes()
     {
         return _basedOn switch
@@ -159,8 +167,8 @@ public sealed class VisumMatrix : IDisposable
     {
         var rows = Rows;
         var columns = Columns;
-        var ret = new T[rows,columns];
-        if(ret.Length != flat.Length)
+        var ret = new T[rows, columns];
+        if (ret.Length != flat.Length)
         {
             throw new VisumException($"The size of the arrays are not the same expected {ret.Length} but received {flat.Length}!");
         }
@@ -300,5 +308,4 @@ public sealed class VisumMatrix : IDisposable
     }
 
     #endregion
-
 }
