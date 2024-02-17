@@ -239,7 +239,9 @@ public sealed class AssignTransitTool : IVisumTool
             .Select(segment =>
             {
                 var s = instance.GetDemandSegment(segment.Code);
-                s.DemandMatrix = instance.GetMatrixByName(segment.DemandMatrix);
+                var matrix = instance.GetMatrixByName(segment.DemandMatrix);
+                matrix.SetAsDemandMatrix();
+                s.DemandMatrix = matrix;
                 return s;
             })
             .ToList();
