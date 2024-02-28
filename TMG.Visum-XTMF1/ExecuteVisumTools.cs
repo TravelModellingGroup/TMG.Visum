@@ -1,4 +1,6 @@
-﻿namespace TMG.Visum;
+﻿using TMG.Functions;
+
+namespace TMG.Visum;
 
 [ModuleInformation(Description = "Allows to easilly chain together commands to a Visum instance.")]
 public sealed class ExecuteVisumTools : ISelfContainedModule
@@ -11,6 +13,9 @@ public sealed class ExecuteVisumTools : ISelfContainedModule
 
     [SubModelInformation(Required = false, Description = "Optional location to save the instance to when the tools finish executing.", Index = 2)]
     public FileLocation? SaveTo;
+
+    [RunParameter("Only Save Final Iteration", false, "Should we only save on the final iteration?")]
+    public bool OnlySaveFinalIteration;
 
     private int _currentTool;
 
@@ -31,7 +36,11 @@ public sealed class ExecuteVisumTools : ISelfContainedModule
         {
             if (SaveTo is not null)
             {
-                instance.SaveVersionFile(SaveTo);
+                if (!OnlySaveFinalIteration || 
+                    _iterativeModel!.CurrentIteration == _iterativeModel.TotalIterations - 1)
+                {
+                    instance.SaveVersionFile(SaveTo);
+                }
             }
             // If we were the ones to load the tool, unload it.
             if (!loaded)
@@ -41,8 +50,25 @@ public sealed class ExecuteVisumTools : ISelfContainedModule
         }
     }
 
+    private IConfiguration _config;
+    private IIterativeModel? _iterativeModel;
+
+    public ExecuteVisumTools(IConfiguration config)
+    {
+        _config = config;
+    }
+
     public bool RuntimeValidation(ref string? error)
     {
+        if (ModelSystemReflection.GetRootOfType(_config, typeof(IIterativeModel), this, out var mss))
+        {
+            _iterativeModel = (IIterativeModel)mss.Module;
+        }
+        if (OnlySaveFinalIteration && _iterativeModel is null)
+        {
+            error = "There was no ancestor that implements the IIterative interface!";
+            return false;
+        }
         return true;
     }
 

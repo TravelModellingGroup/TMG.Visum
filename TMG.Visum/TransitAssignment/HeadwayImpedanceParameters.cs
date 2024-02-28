@@ -1,6 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Xml;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TMG.Visum.TransitAssignment;
 
@@ -11,22 +11,49 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
 {
     internal override string VariantName => "Headway-based";
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float AccessTimeVal { get; init; } = 0;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string BoardingPenaltyPuTAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string BoardingPenaltyPuTAuxAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float EgressTimeVal { get; init; } = 0;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float FarePointVal { get; init; } = 0;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float InVehicleTimeVal { get; init; } = 1;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string InVehicleTimeWeightAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string MeanDelayAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float NumberOfTransfersValue { get; init; } = 0;
 
     /// <summary>
@@ -34,10 +61,19 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     /// </summary>
     public string OriginsToPareaPenaltyAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string OriginTimeProfilePenaltyAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string OriginWaitTimesToPareaWeightAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string OriginWaitTimeTimeProfileWeightAttribute { get; init; } = string.Empty;
 
     /// <summary>
@@ -45,39 +81,91 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     /// </summary>
     public float OriginWaitTimeValue { get; init; } = 1.0f;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float PerceivedJourneyTimeValue { get; init; } = 1.0f;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float PublicTransitAuxiliaryTimeValue { get; init; } = 1.0f;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float TransferWaitTimeValue { get; init; } = 1.0f;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public string TransferWaitTimeWeightAttribute { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public bool UseFareModel { get; init; } = true;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float WalkTimeValue { get; init; } = 1.0f;
 
+    /// <summary>
+    /// 
+    /// </summary>
     override public int AssignmentStartDayIndex { get; init; } = 1;
 
+    /// <summary>
+    /// 
+    /// </summary>
     override public TimeOnly AssignmentStartTime { get; init; } = TimeOnly.Parse("00:00:00");
 
+    /// <summary>
+    /// 
+    /// </summary>
     override public int AssignmentEndDayIndex { get; init; } = 2;
 
+    /// <summary>
+    /// 
+    /// </summary>
     override public TimeOnly AssignmentEndTime { get; init; } = TimeOnly.Parse("00:00:00");
 
+    /// <summary>
+    /// 
+    /// </summary>
     public bool RemoveDominatedPaths { get; init; } = true;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public float ShareLowerBounds { get; init; } = 0.05f;
+
+    /// <summary>
+    /// An attribute used for either saving headways to, or to read from.
+    /// </summary>
+    public string HeadwayAttribute { get; init; } = string.Empty;
+
+
+    /// <summary>
+    /// Use the headways stored in the HeadwayAttribute instead of computing it.
+    /// </summary>
+    public bool UseStoredHeadways { get; init; } = false;
 
     override internal void Write(XmlWriter writer, IList<PutLoSTypes> loSToGenerate)
     {
+        if (UseStoredHeadways && string.IsNullOrWhiteSpace(HeadwayAttribute))
+        {
+            throw new VisumException("When using stored headways you must also have the headway attribute.");
+        }
+
         writer.WriteStartElement("HEADWAYBASEDASSIGNMENTPARAMETERS");
         writer.WriteStartElement("HEADWAYBASEDBASEPARA");
         writer.WriteAttributeString("CALCULATEASSIGNMENT", "1");
         writer.WriteAttributeString("CALCULATESFFORPUTODPAIRLIST", "0");
         writer.WriteAttributeString("CALCULATESKIMMATRICES", "1");
         writer.WriteAttributeString("FROMDESTZONENO", "");
-        writer.WriteAttributeString("HEADWAYCALCULATION", "ExpectedWaitTime");
+        writer.WriteAttributeString("HEADWAYCALCULATION", UseStoredHeadways ? "TimeProfileAttribute" : "ExpectedWaitTime");
         writer.WriteAttributeString("MPAISACTIVE", "0");
         writer.WriteAttributeString("SELECTODRELATIONTYPE", "All");
         //  TIMEINTERVALENDDAYINDEX="123" TIMEINTERVALENDTIME="00:00:00"  TIMEINTERVALSTARTDAYINDEX = "122" TIMEINTERVALSTARTTIME = "00:00:00"
@@ -90,7 +178,10 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("TIMEINTERVALDAYINDEX", AssignmentStartDayIndex.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("TIMEINTERVALSTARTTIME", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("TODESTZONENO", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
-
+        if (!string.IsNullOrWhiteSpace(HeadwayAttribute))
+        {
+            writer.WriteAttributeString("ATTRIBUTE", HeadwayAttribute);
+        }
         // end HEADWAYBASEDINTERVALDATA
         writer.WriteEndElement();
 
@@ -102,7 +193,6 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("DSEGSETFORSKIMMATRICES", "");
         // END HEADWAYBASEDDSEGPARA
         writer.WriteEndElement();
-
 
         writer.WriteStartElement("HEADWAYBASEDSEARCHPARA");
         writer.WriteAttributeString("COORDINATEDTPSUNDISTINGUISHABLE", "1");
@@ -198,7 +288,26 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
 
         // end HEADWAYBASEDASSIGNMENTPARAMETERS
         writer.WriteEndElement();
-     
+
+    }
+
+    internal override bool Validate(VisumInstance instance, [NotNullWhen(false)] out string? error)
+    {
+        if (!string.IsNullOrWhiteSpace(HeadwayAttribute))
+        {
+            if (!instance.CheckAttributeExists(HeadwayAttribute, NetworkObjectType.TimeProfile))
+            {
+                error = $"The Headway Attribute '{HeadwayAttribute}' does not exist!";
+                return false;
+            }
+        }
+        if(string.IsNullOrWhiteSpace(HeadwayAttribute) && UseStoredHeadways)
+        {
+            error = $"You must specify the headway attribute if you are going to load in stored headways!";
+            return false;
+        }
+        error = null;
+        return true;
     }
 
 }
