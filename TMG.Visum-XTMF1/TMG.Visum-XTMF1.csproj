@@ -21,6 +21,9 @@
     <Reference Include="Datastructure">
       <HintPath>..\..\XTMF-Dev\Modules\Datastructure.dll</HintPath>
     </Reference>
+    <Reference Include="TMG.Functions">
+      <HintPath>..\..\XTMF-Dev\Modules\TMG.Functions.dll</HintPath>
+    </Reference>
     <Reference Include="TMGInterfaces">
       <HintPath>..\..\XTMF-Dev\Modules\TMGInterfaces.dll</HintPath>
     </Reference>

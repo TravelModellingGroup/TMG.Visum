@@ -160,6 +160,10 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
+            if (!parameters.Validate(this, out var error))
+            {
+                throw new VisumException(error);
+            }
             ClearPreviousSkims(segments, loSToGenerate);
             tempFileName = WriteProcedure((writer) =>
             {

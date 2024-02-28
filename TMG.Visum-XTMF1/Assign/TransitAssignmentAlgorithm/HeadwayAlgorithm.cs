@@ -69,6 +69,12 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
     [RunParameter("Share Lower Bounds", 0.05f, "")]
     public float ShareLowerBounds;
 
+    [RunParameter("Use Stored Headways", false, "Use the headways stored in the HeadwayAttribute instead of computing it.")]
+    public bool UseStoredHeadways;
+
+    [RunParameter("Headway Attribute", "", "An attribute for either saving headways to, or to read from.")]
+    public string HeadwayAttribute = string.Empty;
+
     internal override TransitAlgorithmParameters GetTransitParameters()
     {
         return new HeadwayImpedanceParameters()
@@ -93,6 +99,18 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
             TransferWaitTimeWeightAttribute = TransferWaitTimeWeightAttribute,
             ShareLowerBounds = ShareLowerBounds,
             WalkTimeValue = WalkTimeValue,
+            HeadwayAttribute = HeadwayAttribute,
+            UseStoredHeadways = UseStoredHeadways,       
         };
+    }
+
+    public override bool RuntimeValidation(ref string? error)
+    {
+        if(UseStoredHeadways && string.IsNullOrWhiteSpace(HeadwayAttribute))
+        {
+            error = "If you want to use the stored headways you must also include the name of the Headway Attribute!";
+            return false;
+        }
+        return base.RuntimeValidation(ref error);
     }
 }
