@@ -47,9 +47,13 @@ public partial class VisumInstance
     /// <param name="name">The name of the attribute to create.</param>
     internal void CreateAttributeIfDoesNotExistInternal(string name, NetworkObjectType netObjectType)
     {
-        if (!TryGetAttributeInternal(name, netObjectType, out _))
+        if (!TryGetAttributeInternal(name, netObjectType, out var at))
         {
             netObjectType.CreateAttributeInternal(_visum!, name);
+        }
+        else
+        {
+            COM.ReleaseCOMObject(ref at);
         }
     }
 
@@ -81,8 +85,16 @@ public partial class VisumInstance
     /// <returns>True if the attribute already exists, false otherwise.</returns>
     internal bool CheckAttributeExistsInternal(string name, NetworkObjectType netObjectType)
     {
-        return TryGetAttributeInternal(name, netObjectType, out var attribute)
-            && attribute is not null;
+        var ret = TryGetAttributeInternal(name, netObjectType, out var attribute);
+        if (ret && attribute is not null)
+        {
+            COM.ReleaseCOMObject(ref attribute);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /// <summary>

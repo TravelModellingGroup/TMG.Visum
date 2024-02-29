@@ -101,6 +101,19 @@ public partial class VisumInstance
     {
         ObjectDisposedException.ThrowIf(_visum is null, this);
 
+        // Before we do this we need to remove references to it
+        // from DemandTimeSeries otherwise it will cascade delete them
+        foreach(IDemandTimeSeries series in _visum.Net.DemandTimeSeriesCont)
+        {
+            if(series.GetStandardTimeSeriesNo() == number)
+            {
+                // TODO: Double check that the assumption for 1 is valid
+                series.SetStandardTimeSeriesNo(1);
+            }
+        }
+
+        // Now that we don't have a demand time series referencing this we
+        // can now remove the time series
         foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
         {
             if (number == series.GetNumber())

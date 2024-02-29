@@ -142,6 +142,11 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     public float ShareLowerBounds { get; init; } = 0.05f;
 
     /// <summary>
+    /// 
+    /// </summary>
+    public float ShareUpperBounds { get; init; } = 0.99f;
+
+    /// <summary>
     /// An attribute used for either saving headways to, or to read from.
     /// </summary>
     public string HeadwayAttribute { get; init; } = string.Empty;
@@ -208,7 +213,7 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("PASSENGERINFORMATIONTYPE", "None_ExpDistRib_HW");
         writer.WriteAttributeString("REMOVEDOMINATEDPATHS", RemoveDominatedPaths ? "1" : "0");
         writer.WriteAttributeString("SHARELOWERBOUNDABS", ShareLowerBounds.ToString(CultureInfo.InvariantCulture));
-        writer.WriteAttributeString("SHAREUPPERBOUNDREL", "1");
+        writer.WriteAttributeString("SHAREUPPERBOUNDREL", ShareUpperBounds.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("USECALCULATIONTIMEOPTIMIZEDALGORITHM", "1");
         writer.WriteAttributeString("USEDISCRCHOICEAMONGSTOPAREAS", "0");
         writer.WriteAttributeString("USEDISCRCHOICEBETWEENBOARDANDALIGHT", "0");
@@ -295,7 +300,7 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     {
         if (!string.IsNullOrWhiteSpace(HeadwayAttribute))
         {
-            if (!instance.CheckAttributeExists(HeadwayAttribute, NetworkObjectType.TimeProfile))
+            if (!instance.CheckAttributeExistsInternal(HeadwayAttribute, NetworkObjectType.TimeProfile))
             {
                 error = $"The Headway Attribute '{HeadwayAttribute}' does not exist!";
                 return false;

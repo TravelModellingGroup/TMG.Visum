@@ -12,7 +12,12 @@ public partial class VisumInstance
     /// </summary>
     /// <param name="segment">The demand segment to execute with.</param>
     /// <param name="loSToGenerate"></param>
-    /// <param name="parameters"></param>
+    /// <param name="parameters">The parameters to use for the transit assignment.</param>
+    /// <param name="iterations">
+    ///     The number of iterations to execute, this only makes sense if you
+    ///     are also using Surface Transit Speed Updating.
+    /// </param>
+    /// <param name="stsuParmaters">Parameters for Surface Transit Speed Updating.</param>
     /// <returns>A list of matrices for the demand segment for each LoS to Generate.</returns>
     /// <exception cref="VisumException"></exception>
     public List<VisumMatrix> ExecuteTransitAssignment(VisumDemandSegment segment, IList<PutLoSTypes> loSToGenerate,
@@ -25,8 +30,14 @@ public partial class VisumInstance
     /// Execute a transit assignment using multiple demand segments.
     /// </summary>
     /// <param name="segments">The demand segments to execute with.</param>
+    /// <param name="loSToGenerate"></param>
+    /// <param name="parameters">The parameters to use for the transit assignment.</param>
+    /// <param name="iterations">
+    ///     The number of iterations to execute, this only makes sense if you
+    ///     are also using Surface Transit Speed Updating.
+    /// </param>
+    /// <param name="stsuParmaters">Parameters for Surface Transit Speed Updating.</param>
     /// <returns>A list for each demand segment of all of the requested LoS matrices.</returns>
-    /// <exception cref="VisumException"></exception>
     public List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate,
         TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
     {
@@ -47,18 +58,17 @@ public partial class VisumInstance
                     parameters);
                 UpdateDwellTimes(stsuParmaters);
             }
+            // clean-up the temporary time series
+            if (tempTimeSeries is not null)
+            {
+                var number = tempTimeSeries.Number;
+                tempTimeSeries.Dispose();
+                RemoveStandardTimeSeriesInternal(number);
+            }
             return matrices!;
         }
         finally
         {
-            // clean-up the temporary time series
-            if (tempTimeSeries is not null)
-            {
-                // TODO: Ignore this for now.
-                // var number = tempTimeSeries.Number;
-                // tempTimeSeries.Dispose();
-                // RemoveStandardTimeSeriesInternal(number);
-            }
             _lock.ExitWriteLock();
         }
     }
@@ -83,7 +93,15 @@ public partial class VisumInstance
         foreach (var segment in segments)
         {
             using var demandTimeSeries = segment.GetDemandTimeSeriesInternal();
-            demandTimeSeries.StandardTimeSeriesNumber = number;
+            if (demandTimeSeries is not null)
+            {
+                demandTimeSeries.StandardTimeSeriesNumber = number;
+            }
+            else
+            {
+                throw new VisumException($"We did not have a demand time series for" +
+                    $" transit segment '{segment.Name}'!");
+            }
         }
         return tempTimeSeries;
     }
@@ -96,7 +114,6 @@ public partial class VisumInstance
         }
         ObjectDisposedException.ThrowIf(_visum is null, this);
         var filter = _visum.Filters.LineGroupFilter().TimeProfileItemFilter();
-
         foreach (var parameter in stsuParmaters)
         {
 

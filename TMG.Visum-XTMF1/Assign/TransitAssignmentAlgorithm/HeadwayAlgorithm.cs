@@ -69,6 +69,9 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
     [RunParameter("Share Lower Bounds", 0.05f, "")]
     public float ShareLowerBounds;
 
+    [RunParameter("Share Upper Bounds", 0.99f, "")]
+    public float ShareUpperBounds;
+
     [RunParameter("Use Stored Headways", false, "Use the headways stored in the HeadwayAttribute instead of computing it.")]
     public bool UseStoredHeadways;
 
@@ -98,6 +101,7 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
             TransferWaitTimeValue = TransferWaitTimeValue,
             TransferWaitTimeWeightAttribute = TransferWaitTimeWeightAttribute,
             ShareLowerBounds = ShareLowerBounds,
+            ShareUpperBounds = ShareUpperBounds,
             WalkTimeValue = WalkTimeValue,
             HeadwayAttribute = HeadwayAttribute,
             UseStoredHeadways = UseStoredHeadways,       
