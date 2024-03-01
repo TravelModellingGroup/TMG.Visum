@@ -1,6 +1,7 @@
 ﻿// Ignore Spelling: Visum
 
-using CommunityToolkit.HighPerformance;
+using System.Reflection.Metadata;
+using System.Security.Cryptography;
 using TMG.Visum.TransitAssignment;
 
 namespace TMG.Visum;
@@ -12,7 +13,7 @@ public partial class VisumInstance
     /// </summary>
     /// <param name="segment">The demand segment to execute with.</param>
     /// <param name="loSToGenerate"></param>
-    /// <param name="parameters">The parameters to use for the transit assignment.</param>
+    /// <param name="algorithm">The parameters to use for the transit assignment.</param>
     /// <param name="iterations">
     ///     The number of iterations to execute, this only makes sense if you
     ///     are also using Surface Transit Speed Updating.
@@ -21,9 +22,9 @@ public partial class VisumInstance
     /// <returns>A list of matrices for the demand segment for each LoS to Generate.</returns>
     /// <exception cref="VisumException"></exception>
     public List<VisumMatrix> ExecuteTransitAssignment(VisumDemandSegment segment, IList<PutLoSTypes> loSToGenerate,
-        TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
+        TransitAlgorithmParameters algorithm, int iterations = 1)
     {
-        return ExecuteTransitAssignment(new VisumDemandSegment[] { segment }, loSToGenerate, parameters)[0];
+        return ExecuteTransitAssignment([segment], loSToGenerate, algorithm)[0];
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public partial class VisumInstance
     /// </summary>
     /// <param name="segments">The demand segments to execute with.</param>
     /// <param name="loSToGenerate"></param>
-    /// <param name="parameters">The parameters to use for the transit assignment.</param>
+    /// <param name="algorithm">The parameters to use for the transit assignment.</param>
     /// <param name="iterations">
     ///     The number of iterations to execute, this only makes sense if you
     ///     are also using Surface Transit Speed Updating.
@@ -39,24 +40,27 @@ public partial class VisumInstance
     /// <param name="stsuParmaters">Parameters for Surface Transit Speed Updating.</param>
     /// <returns>A list for each demand segment of all of the requested LoS matrices.</returns>
     public List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate,
-        TransitAlgorithmParameters parameters, int iterations = 1, IList<STSUParameters>? stsuParmaters = null)
+        TransitAlgorithmParameters algorithm, int iterations = 1)
     {
         CheckTransitAssignmentParameters(segments);
 
         _lock.EnterWriteLock();
-        VisumStandardTimeSeries? tempTimeSeries = null;
         try
         {
-            tempTimeSeries = SetupTempTimeSeries(segments, parameters);
-            UpdateSTSUSegmentSpeeds(stsuParmaters);
+            VisumStandardTimeSeries? tempTimeSeries = SetupTempTimeSeries(segments, algorithm);
+            UpdateSTSUSegmentSpeeds(algorithm);
             List<List<VisumMatrix>>? matrices = null;
             for (int i = 0; i < iterations; i++)
             {
+                var moreIterations = i < iterations - 1;
                 // Only generate the LoS during the last iteration
                 matrices = ExecuteTransitAssignment(segments,
-                    i < iterations - 1 ? Array.Empty<PutLoSTypes>() : loSToGenerate,
-                    parameters);
-                UpdateDwellTimes(stsuParmaters);
+                     moreIterations ? Array.Empty<PutLoSTypes>() : loSToGenerate,
+                    algorithm);
+                if (moreIterations)
+                {
+                    UpdateDwellTimes(algorithm);
+                }
             }
             // clean-up the temporary time series
             if (tempTimeSeries is not null)
@@ -106,69 +110,49 @@ public partial class VisumInstance
         return tempTimeSeries;
     }
 
-    private void UpdateSTSUSegmentSpeeds(IList<STSUParameters>? stsuParmaters)
+    private void UpdateSTSUSegmentSpeeds(TransitAlgorithmParameters algorithm)
     {
-        if (stsuParmaters is null || stsuParmaters.Count <= 0)
-        {
-            return;
-        }
         ObjectDisposedException.ThrowIf(_visum is null, this);
-        var filter = _visum.Filters.LineGroupFilter().TimeProfileItemFilter();
-        foreach (var parameter in stsuParmaters)
-        {
-
-        }
-        filter.UseFilter = true;
-        var linkTimeAttribute = $"TCUR_PRTSYS({stsuParmaters[0].AutoDemandSegment})";
-        // Update the 
-        foreach (ITimeProfile timeProfile in _visum.Net.TimeProfiles)
-        {
-            // Find the stsuParameter to use for this time profile
-            int index = -1;
-            if (index >= 0)
-            {
-                var autoCorrelation = stsuParmaters[index].AutoCorrelation;
-                foreach (ITimeProfileItem item in timeProfile.TimeProfileItems)
-                {
-                    if (!item.Active)
-                    {
-                        continue;
-                    }
-                    double segmentTime = (double)(((ILink)item.LineRouteItem.AttValue["INLINK"]).AttValue[linkTimeAttribute]) * autoCorrelation;
-                    item.AttValue["ADDVALUE"] = segmentTime;
-                }
-                timeProfile.Active = true;
-            }
-            else
-            {
-                timeProfile.Active = false;
-            }
-        }
-
-        // Step 2: Assign the updated run-times
-        ExecuteSetRunAndDwellTimesInternal(new SetRunAndDwellTimeParameters()
-        {
-            AddValues = false,
-            UpdateRunTime = true,
-            RunTimeLinkFactor = 1.0f,
-            RunTimeLinkAttrId = $"AddValue",
-            RunTimeGuardOnlyActiveLinks = true,
-        });
-
-
+        algorithm.UpdateSTSUSegmentSpeeds(this);
     }
 
-    private void UpdateDwellTimes(IList<STSUParameters>? stsuParmaters)
+    private void FilterOnlyActiveLines(TransitAlgorithmParameters algorithm)
     {
-        if (stsuParmaters is null)
-        {
-            return;
-        }
+        var filter = _visum!.Filters.LineGroupFilter();
+        // Clear the rest of the filters
+        SetLineGroupFilterInternal(true);
+        filter.LineFilter().UseFilter = false;
+        filter.LineRouteFilter().UseFilter = false;
+        filter.TimeProfileItemFilter().UseFilter = false;
+        filter.LineRouteItemFilter().UseFilter = false;
+        filter.VehJourneyFilter().UseFilter = false;
+        filter.VehJourneyItemFilter().UseFilter = false;
+        filter.TimeProfileFilter().UseFilter = false;
+        algorithm.ApplyActiveLineFilter(filter);
+    }
 
-        foreach (var parameters in stsuParmaters)
-        {
+    /// <summary>
+    /// Enable the line group filters
+    /// MUST OWN WRITE LOCK
+    /// </summary>
+    /// <param name="enable">Should we enable or disable them?</param>
+    internal void SetLineGroupFilterInternal(bool enable)
+    {
+        var filter = _visum!.Filters.LineGroupFilter();
+        filter.UseFilterForLineRouteItems = enable;
+        filter.UseFilterForLineRoutes = enable;
+        filter.UseFilterForLines = enable;
+        filter.UseFilterForTimeProfileItems = enable;
+        filter.UseFilterForTimeProfiles = enable;
+        filter.UseFilterForVehJourneyItems = enable;
+        filter.UseFilterForVehJourneys = enable;
+        filter.UseFilterForVehJourneySections = enable;
+    }
 
-        }
+    private void UpdateDwellTimes(TransitAlgorithmParameters algorithm)
+    {
+        algorithm.UpdateDwellTimes(this);
+        SetLineGroupFilterInternal(false);
     }
 
     private List<List<VisumMatrix>> ExecuteTransitAssignment(IList<VisumDemandSegment> segments, IList<PutLoSTypes> loSToGenerate, TransitAlgorithmParameters parameters)
@@ -181,6 +165,7 @@ public partial class VisumInstance
             {
                 throw new VisumException(error);
             }
+            FilterOnlyActiveLines(parameters);
             ClearPreviousSkims(segments, loSToGenerate);
             tempFileName = WriteProcedure((writer) =>
             {
@@ -229,6 +214,7 @@ public partial class VisumInstance
         finally
         {
             Files.SafeDelete(tempFileName);
+            SetLineGroupFilterInternal(false);
         }
     }
 

@@ -166,6 +166,17 @@ public sealed partial class VisumInstance : IDisposable
         _visum.Procedures.Execute();
     }
 
+    /// <summary>
+    /// Open a filter file
+    /// MUST OWN THE WRITE LOCK
+    /// </summary>
+    /// <param name="filterFileName">The path of the filter file to loadd.</param>
+    internal void OpenFilterInner(string filterFileName)
+    {
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+        _visum.Filters.Open(filterFileName);
+    }
+
     #region IDispose
 
     private bool disposedValue;

@@ -1,4 +1,5 @@
-﻿using TMG.Visum.TransitAssignment;
+﻿using System.Globalization;
+using TMG.Visum.TransitAssignment;
 using VISUMLIB;
 
 namespace TMG.Visum;
@@ -25,6 +26,7 @@ public partial class VisumInstance
     internal void ExecuteSetRunAndDwellTimesInternal(SetRunAndDwellTimeParameters parameters)
     {
         string? tempFileName = null;
+        static string GetBoolString(bool value) => value ? "1" : "0";
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
@@ -33,8 +35,37 @@ public partial class VisumInstance
                 writer.WriteStartElement("OPERATION");
                 writer.WriteAttributeString("ACTIVE", "1");
                 writer.WriteAttributeString("NO", "1");
-                writer.WriteAttributeString("OPERATIONTYPE", "PuTAssignment");
+                writer.WriteAttributeString("OPERATIONTYPE", "UpdateTravelTimes");
                 writer.WriteAttributeString("PARENTGROUPINDEX", "0");
+
+                writer.WriteStartElement("UPDATETIMEPROFILETRAVELTIMESPARA");
+                writer.WriteAttributeString("ADDVALUES", GetBoolString(parameters.AddValues));
+                writer.WriteAttributeString("MODEFORUNUSEDTIMEPROFILEITEMS", parameters.ModeForUnusedTimeProfileItems);
+
+                writer.WriteAttributeString("ONLYACTIVETIMEPROFILEITEMS", GetBoolString(parameters.OnlyActiveTimeProfileItems));
+                writer.WriteAttributeString("RUNTIMECONSTANT", parameters.RunTimeConstant.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("RUNTIMELINKATTRID", parameters.RunTimeLinkAttrId);
+                writer.WriteAttributeString("RUNTIMELINKFACTOR", parameters.RunTimeLinkFactor.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("RUNTIMEMETHOD", parameters.RunTimeMethod);
+                writer.WriteAttributeString("RUNTIMEREGARDONLYACTIVELINKS", GetBoolString(parameters.OnlyActiveTimeProfileItems));
+                writer.WriteAttributeString("RUNTIMEREGARDSYSROUTEONLYIFVEHCOMBFITS", "0");
+                writer.WriteAttributeString("RUNTIMEREGARDTURNSANDMAINTURNS", "0");
+                writer.WriteAttributeString("RUNTIMEROUNDINGMETHOD", parameters.RunTimeRoundingMethod);
+                writer.WriteAttributeString("RUNTIMETIMEPROFILEITEMATTRID", parameters.RunTimeTimeProfileItemAttrId);
+                writer.WriteAttributeString("RUNTIMETIMEPROFILEITEMFACTOR", parameters.RunTimeTimeProfileItemFactor.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("RUNTIMETURNATTRID", parameters.RunTimeTurnAttrId);
+                writer.WriteAttributeString("STOPTIMECONSTANT", parameters.RunTimeTurnFactor.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("STOPTIMEMETHOD", parameters.StopTimeMethod);
+                writer.WriteAttributeString("STOPTIMEROUNDINGMETHOD", parameters.StopTimeRoundingMethod);
+                writer.WriteAttributeString("STOPTIMESTOPPOINTATTRID", parameters.StopTimeStopPointAttrId);
+                writer.WriteAttributeString("STOPTIMESTOPPOINTFACTOR", parameters.StopTimeStopPointFactor.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("STOPTIMETIMEPROFILEITEMATTRID", parameters.StopTimeTimeProfileItemAttrId);
+                writer.WriteAttributeString("STOPTIMETIMEPROFILEITEMFACTOR", parameters.StopTimeTimeProfileItemFactor.ToString(CultureInfo.InvariantCulture));
+
+                writer.WriteAttributeString("UPDATERUNTIME", GetBoolString(parameters.UpdateRunTime));
+                writer.WriteAttributeString("UPDATESTOPTIME", GetBoolString(parameters.UpdateStopTime));
+                //END UPDATETIMEPROFILETRAVELTIMESPARA
+                writer.WriteEndElement();
 
                 // end OPERATION
                 writer.WriteEndElement();
@@ -82,7 +113,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public string RunTimeLinkAttrId { get; init; } = "TCUR_PRTSYS(C)";
+    public string RunTimeLinkAttrId { get; init; } = "";
 
     /// <summary>
     /// 
@@ -102,7 +133,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public bool RunTimeRegardSysRouteOnlyIfVehicleCombFits{ get; init; } = false;
+    public bool RunTimeRegardSysRouteOnlyIfVehicleCombFits { get; init; } = false;
 
     /// <summary>
     /// 
@@ -122,7 +153,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public float RunTimeTimeProfileItemFactor{ get; init; } = 1.0f;
+    public float RunTimeTimeProfileItemFactor { get; init; } = 1.0f;
 
     /// <summary>
     /// 
@@ -132,7 +163,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public float RunTimeTurnFactor{ get; init; } = 1.0f;
+    public float RunTimeTurnFactor { get; init; } = 1.0f;
 
     /// <summary>
     /// 
@@ -162,7 +193,7 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public string StopTimeTimeProfileItemAttrId{ get; init; } = "ADDVAL";
+    public string StopTimeTimeProfileItemAttrId { get; init; } = "ADDVAL";
 
     /// <summary>
     /// 
@@ -172,12 +203,12 @@ public sealed class SetRunAndDwellTimeParameters
     /// <summary>
     /// 
     /// </summary>
-    public bool UpdateRunTime { get; init; } = true;
+    public bool UpdateRunTime { get; init; } = false;
 
     /// <summary>
     /// 
     /// </summary>
-    public bool UpdateStopTime { get; init; } = true;
+    public bool UpdateStopTime { get; init; } = false;
 
     /// <summary>
     /// 

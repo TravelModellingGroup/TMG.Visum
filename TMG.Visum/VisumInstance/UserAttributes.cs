@@ -67,13 +67,18 @@ public partial class VisumInstance
     internal bool TryGetAttributeInternal(string name, NetworkObjectType netObjectType,
         [NotNullWhen(true)] out IAttribute? attribute)
     {
-        try
+        IAttributes attributes = netObjectType.GetAttributes(_visum!);
+        var allAttributes = (object[])attributes.GetAll;
+        for (int i = 0; i < allAttributes.Length; i++)
         {
-            var attributes = netObjectType.GetAttributes(_visum!);
-            attribute = attributes.ItemByKey[name];
-            return attribute is not null;
+            var at = (IAttribute)allAttributes[i];
+            var atName = (string)at.get_Name();
+            if (atName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+            {
+                attribute = at;
+                return true;
+            }
         }
-        catch { }
         attribute = null;
         return false;
     }

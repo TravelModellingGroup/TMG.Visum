@@ -117,7 +117,7 @@ public sealed class VisumDemandSegment : IDisposable
         {
             ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
             var description = _segment.GetDemandDescription();
-            description.AttValue["DemandTimeSeriesNo"] = (double)value.Number;
+            description.AttValue["DemandTimeSeriesNo"] = (double)(value?.Number ?? 0);
         }
     }
 
