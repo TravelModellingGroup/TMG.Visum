@@ -64,4 +64,16 @@ public abstract class TransitAlgorithmParameters
     /// </summary>
     /// <param name="visumInstance">The instance that this transit assignment will execute on.</param>
     internal abstract void UpdateSTSUSegmentSpeeds(VisumInstance visumInstance);
+
+    /// <summary>
+    /// Called before running any iterations.
+    /// </summary>
+    /// <param name="visumInstance"></param>
+    internal abstract void Setup(VisumInstance visumInstance);
+
+    /// <summary>
+    /// Called after all iterations have been completed.
+    /// </summary>
+    /// <param name="instance">The instance of VISUM that was used for the transit assignment.</param>
+    internal abstract void CleanUp(VisumInstance instance);
 }

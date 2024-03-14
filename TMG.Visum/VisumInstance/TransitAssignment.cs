@@ -48,6 +48,7 @@ public partial class VisumInstance
         try
         {
             VisumStandardTimeSeries? tempTimeSeries = SetupTempTimeSeries(segments, algorithm);
+            algorithm.Setup(this);
             UpdateSTSUSegmentSpeeds(algorithm);
             List<List<VisumMatrix>>? matrices = null;
             for (int i = 0; i < iterations; i++)
@@ -62,6 +63,7 @@ public partial class VisumInstance
                     UpdateDwellTimes(algorithm);
                 }
             }
+            algorithm.CleanUp(this);
             // clean-up the temporary time series
             if (tempTimeSeries is not null)
             {

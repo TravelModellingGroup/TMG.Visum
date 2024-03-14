@@ -78,8 +78,14 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
     [RunParameter("Headway Attribute", "", "An attribute for either saving headways to, or to read from.")]
     public string HeadwayAttribute = string.Empty;
 
-    [RunParameter("Use Optimized Headways", true, "Should we use optimized headways? If not constant headways will be used.")]
-    public bool UseOptimizedHeadways;
+    [RunParameter("Passenger Information", HeadwayImpedanceParameters.HeadwayStrategy.CompleteInformation, "Which passenger information option should we use?")]
+    public HeadwayImpedanceParameters.HeadwayStrategy PassengerInformation;
+
+    [RunParameter("PreciseMethodUpTo", 30, "The number of alternatives when using information before falling back to the approximation algorithm.")]
+    public int PreciseMethodUpTo = 30;
+
+    [RunParameter("Approximation Iterations", 100, "The number of iterations to use when running the approximation algorithm if there are too many alternative paths.")]
+    public int NumberOfIterationsUsingApproximation = 100;
 
     [ModuleInformation(Description = "A module that describes how to update the speed of")]
     public class STSUClass : IModule
@@ -167,9 +173,11 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
             WalkTimeValue = WalkTimeValue,
             HeadwayAttribute = HeadwayAttribute,
             UseStoredHeadways = UseStoredHeadways,
-            UseOptimizedHeadways = UseOptimizedHeadways,
+            PassengerInformation = PassengerInformation,
             UseFareModel = UseFareModel,
-            STSUParameters = CreateSTSUParameters()
+            STSUParameters = CreateSTSUParameters(),
+            PreciseMethodUpTo = PreciseMethodUpTo,
+            NumberOfIterationsUsingApproximation = NumberOfIterationsUsingApproximation,
         };
     }
 
