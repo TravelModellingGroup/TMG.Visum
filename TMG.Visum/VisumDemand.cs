@@ -104,7 +104,7 @@ public sealed class VisumDemandSegment : IDisposable
         set => _segment.AttValue["PrFacAP"] = value;
     }
 
-    public VisumDemandTimeSeries DemandTimeSeries
+    public VisumDemandTimeSeries? DemandTimeSeries
     {
         get
         {
@@ -117,7 +117,7 @@ public sealed class VisumDemandSegment : IDisposable
         {
             ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
             var description = _segment.GetDemandDescription();
-            description.AttValue["DemandTimeSeriesNo"] = (double)value.Number;
+            description.AttValue["DemandTimeSeriesNo"] = (double)(value?.Number ?? 0);
         }
     }
 
@@ -125,12 +125,14 @@ public sealed class VisumDemandSegment : IDisposable
     /// INERNAL ONLY - You must have a read or write lock before calling this!
     /// </summary>
     /// <returns>The DemandTimeSeries for this demand segment.</returns>
-    internal VisumDemandTimeSeries GetDemandTimeSeriesInternal()
+    internal VisumDemandTimeSeries? GetDemandTimeSeriesInternal()
     {
         ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
         var description = _segment.GetDemandDescription();
         var timeSeriesNumber = (int)(double)description.AttValue["DemandTimeSeriesNo"];
-        return _instance.GetDemandTimeSeriesInternal(timeSeriesNumber);
+        return timeSeriesNumber == 0 ?
+                  null
+                : _instance.GetDemandTimeSeriesInternal(timeSeriesNumber);
     }
 
     /// <summary>

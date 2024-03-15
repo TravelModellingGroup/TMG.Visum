@@ -9,6 +9,11 @@ namespace TMG.Visum.TransitAssignment;
 /// </summary>
 public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
 {
+    /// <summary>
+    /// The name to use for the temporary attribute
+    /// </summary>
+    private const string TempAttributeName = "Temp";
+
     internal override string VariantName => "Headway-based";
 
     /// <summary>
@@ -142,6 +147,11 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     public float ShareLowerBounds { get; init; } = 0.05f;
 
     /// <summary>
+    /// 
+    /// </summary>
+    public float ShareUpperBounds { get; init; } = 0.99f;
+
+    /// <summary>
     /// An attribute used for either saving headways to, or to read from.
     /// </summary>
     public string HeadwayAttribute { get; init; } = string.Empty;
@@ -152,13 +162,40 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     /// </summary>
     public bool UseStoredHeadways { get; init; } = false;
 
+    /// <summary>
+    /// If using complete information the number of precise alternatives to try
+    /// before falling back to the approximation method.
+    /// </summary>
+    public int PreciseMethodUpTo { get; init; } = 30;
+
+    /// <summary>
+    /// The number of iterations to use when approximating complete information.
+    /// </summary>
+    public int NumberOfIterationsUsingApproximation { get; init; } = 100;
+
+    public enum HeadwayStrategy
+    {
+        OptimalStrategy,
+        ConstantHeadways,
+        CompleteInformation
+    }
+
+    /// <summary>
+    /// Use Optimized headway wait time, otherwise it will use constant wait times.
+    /// </summary>
+    public HeadwayStrategy PassengerInformation { get; init; } = HeadwayStrategy.CompleteInformation;
+
+    /// <summary>
+    /// The parameters used for implementing STSU for the Headway Assignment.
+    /// </summary>
+    public STSUParameters[]? STSUParameters { get; init; } = null!;
+
     override internal void Write(XmlWriter writer, IList<PutLoSTypes> loSToGenerate)
     {
         if (UseStoredHeadways && string.IsNullOrWhiteSpace(HeadwayAttribute))
         {
             throw new VisumException("When using stored headways you must also have the headway attribute.");
         }
-
         writer.WriteStartElement("HEADWAYBASEDASSIGNMENTPARAMETERS");
         writer.WriteStartElement("HEADWAYBASEDBASEPARA");
         writer.WriteAttributeString("CALCULATEASSIGNMENT", "1");
@@ -178,7 +215,11 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("TIMEINTERVALDAYINDEX", AssignmentStartDayIndex.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("TIMEINTERVALSTARTTIME", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("TODESTZONENO", AssignmentStartTime.ToString(CultureInfo.InvariantCulture));
-        if (!string.IsNullOrWhiteSpace(HeadwayAttribute))
+        if(RequiresTempAttribute())
+        {
+            writer.WriteAttributeString("ATTRIBUTE", TempAttributeName);
+        }
+        else if (!string.IsNullOrWhiteSpace(HeadwayAttribute))
         {
             writer.WriteAttributeString("ATTRIBUTE", HeadwayAttribute);
         }
@@ -202,13 +243,21 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         writer.WriteAttributeString("INFOFORDIFFERENTSTOPAREAS", "0");
         writer.WriteAttributeString("INFOINVEHICLE", "0");
         writer.WriteAttributeString("INTERCHANGETYPE", "Use");
-        writer.WriteAttributeString("MAXPOLYNOMDEGREEFORINTEGRATION", "30");
-        writer.WriteAttributeString("NUMSIMULATIONS", "100");
+        writer.WriteAttributeString("MAXPOLYNOMDEGREEFORINTEGRATION", PreciseMethodUpTo
+            .ToString(CultureInfo.InvariantCulture));
+        writer.WriteAttributeString("NUMSIMULATIONS", NumberOfIterationsUsingApproximation
+            .ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("ONLYACTIVETIMEPROFILES", "1");
-        writer.WriteAttributeString("PASSENGERINFORMATIONTYPE", "None_ExpDistRib_HW");
+        writer.WriteAttributeString("PASSENGERINFORMATIONTYPE", PassengerInformation switch
+        {
+            HeadwayStrategy.OptimalStrategy => "None_ExpDistRib_HW",
+            HeadwayStrategy.ConstantHeadways => "None_Constant_HW",
+            HeadwayStrategy.CompleteInformation => "Complete",
+            _ => throw new VisumException("Unknown Passenger Information!")
+        });
         writer.WriteAttributeString("REMOVEDOMINATEDPATHS", RemoveDominatedPaths ? "1" : "0");
         writer.WriteAttributeString("SHARELOWERBOUNDABS", ShareLowerBounds.ToString(CultureInfo.InvariantCulture));
-        writer.WriteAttributeString("SHAREUPPERBOUNDREL", "1");
+        writer.WriteAttributeString("SHAREUPPERBOUNDREL", ShareUpperBounds.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("USECALCULATIONTIMEOPTIMIZEDALGORITHM", "1");
         writer.WriteAttributeString("USEDISCRCHOICEAMONGSTOPAREAS", "0");
         writer.WriteAttributeString("USEDISCRCHOICEBETWEENBOARDANDALIGHT", "0");
@@ -295,19 +344,127 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     {
         if (!string.IsNullOrWhiteSpace(HeadwayAttribute))
         {
-            if (!instance.CheckAttributeExists(HeadwayAttribute, NetworkObjectType.TimeProfile))
+            if (!instance.CheckAttributeExistsInternal(HeadwayAttribute, NetworkObjectType.TimeProfile))
             {
                 error = $"The Headway Attribute '{HeadwayAttribute}' does not exist!";
                 return false;
             }
         }
-        if(string.IsNullOrWhiteSpace(HeadwayAttribute) && UseStoredHeadways)
+        if (string.IsNullOrWhiteSpace(HeadwayAttribute) && UseStoredHeadways)
         {
             error = $"You must specify the headway attribute if you are going to load in stored headways!";
             return false;
         }
         error = null;
         return true;
+    }
+
+    internal override void ApplyActiveLineFilter(ILineGroupFilter filter)
+    {
+        if (string.IsNullOrWhiteSpace(HeadwayAttribute) || !UseStoredHeadways)
+        {
+            return;
+        }
+        var timeProfileFilter = filter.TimeProfileFilter();
+        timeProfileFilter.RemoveConditions();
+        timeProfileFilter.AddCondition("OP_NONE", false, HeadwayAttribute, "LESSVAL", 9999.0);
+        timeProfileFilter.UseFilter = true;
+
+    }
+
+    internal override void UpdateDwellTimes(VisumInstance instance)
+    {
+        if (STSUParameters is null)
+        {
+            return;
+        }
+        // Compute how long the assignment period is in hours
+        var numberOfHours = 24.0 * (AssignmentEndDayIndex - AssignmentStartDayIndex) + (AssignmentEndTime - AssignmentStartTime).TotalHours;
+        foreach (var parameter in STSUParameters)
+        {
+            // Update Filter
+            instance.OpenFilterInner(parameter.FilterFileName);
+            instance.SetLineGroupFilterInternal(true);
+            // Setup Dwell Time
+            instance.ExecuteEditAttributeInternal(new EditAttributeParameters()
+            {
+                NetObjectType = "TIMEPROFILEITEM",
+                OnlyActive = true,
+                ResultAttributeName = "ADDVAL",
+                Formula = $"IF(MAX([ALIGHT],[BOARD]) > 0,{parameter.StopDuration} + ([LINEROUTEITEM\\PASSALIGHT(AP)] * {parameter.AlightingDuration} + [LINEROUTEITEM\\PASSBOARD(AP)] * {parameter.BoardingDuration})*([{numberOfHours} * 60.0 / // {HeadwayAttribute}]),0)",
+            });
+
+            // Apply to lines in the filter
+            instance.ExecuteSetRunAndDwellTimesInternal(new SetRunAndDwellTimeParameters()
+            {
+                AddValues = false,
+                UpdateStopTime = true,
+                StopTimeMethod = "FROMTPIATTR",
+                StopTimeTimeProfileItemAttrId = "ADDVAL",
+                StopTimeTimeProfileItemFactor = 1.0f,
+                OnlyActiveTimeProfileItems = true,
+            });
+        }
+    }
+
+    internal override void UpdateSTSUSegmentSpeeds(VisumInstance instance)
+    {
+        if (STSUParameters is null)
+        {
+            return;
+        }
+
+        foreach (var parameter in STSUParameters)
+        {
+            // Update Filter
+            instance.OpenFilterInner(parameter.FilterFileName);
+            instance.SetLineGroupFilterInternal(true);
+            var autoTimes = $"[LINEROUTEITEM\\OUTLINK\\TCUR_PRTSYS({parameter.AutoDemandSegment})]";
+            // Setup Runtime
+            instance.ExecuteEditAttributeInternal(new EditAttributeParameters()
+            {
+                NetObjectType = "TIMEPROFILEITEM",
+                OnlyActive = true,
+                ResultAttributeName = "ADDVAL",
+                Formula = $"IF({autoTimes} < 9999, {autoTimes}, 60 * [LINEROUTEITEM\\OUTLINK\\LENGTH] / {parameter.DefaultEROWSpeed})"
+            });
+
+            // Apply to lines in the filter
+            instance.ExecuteSetRunAndDwellTimesInternal(new SetRunAndDwellTimeParameters()
+            {
+                AddValues = false,
+                UpdateRunTime = true,
+                RunTimeTimeProfileItemFactor = parameter.AutoCorrelation,
+                RunTimeTimeProfileItemAttrId = "ADDVAL",
+                RunTimeMethod = "FROMTPIATTR",
+                RunTimeGuardOnlyActiveLinks = true,
+                OnlyActiveTimeProfileItems = true,
+
+            });
+        }
+    }
+    
+
+    private bool RequiresTempAttribute()
+    {
+        return (STSUParameters?.Length ?? 0) > 0 && (!UseStoredHeadways && string.IsNullOrWhiteSpace(HeadwayAttribute));
+    }
+
+    internal override void Setup(VisumInstance instance)
+    {
+        if (RequiresTempAttribute())
+        {
+            instance.CreateAttributeIfDoesNotExistInternal(TempAttributeName, NetworkObjectType.TimeProfile);
+        }
+    }
+
+    internal override void CleanUp(VisumInstance instance)
+    {
+        // Cleanup the temp attribute if we needed to create it.
+        if (RequiresTempAttribute())
+        {
+            instance.DeleteAttributeInternal(TempAttributeName, NetworkObjectType.TimeProfile);
+        }
     }
 
 }

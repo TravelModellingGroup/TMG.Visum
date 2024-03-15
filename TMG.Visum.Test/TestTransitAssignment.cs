@@ -27,7 +27,41 @@ public class TestTransitAssignment
         }
         finally
         {
-            instance.SaveVersionFile("Temp.ver");
+            //DEBUG: instance.SaveVersionFile("Temp.ver");
+        }
+    }
+
+    [TestMethod]
+    public void MultipleHeadwayAssignments()
+    {
+        using var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSegment = instance.GetDemandSegment("X");
+            using var transitDemand = instance.CreateDemandMatrix(1, "X demand");
+            // Assign 3 demand for all OD.
+            transitDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
+            transitSegment.DemandMatrix = transitDemand;
+            var matrices = instance.ExecuteTransitAssignment(transitSegment,
+                new PutLoSTypes[]
+                {
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
+                },
+                new HeadwayImpedanceParameters());
+            DisposeMatrices(matrices);
+            // Execute a second transit assignment
+            matrices = instance.ExecuteTransitAssignment(transitSegment,
+                new PutLoSTypes[]
+                {
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
+                },
+                new HeadwayImpedanceParameters());
+        }
+        finally
+        {
+            //DEBUG: instance.SaveVersionFile("Temp.ver");
         }
     }
 
@@ -61,7 +95,7 @@ public class TestTransitAssignment
         }
         finally
         {
-            instance.SaveVersionFile("Temp.ver");
+            //DEBUG: instance.SaveVersionFile("Temp.ver");
         }
     }
 

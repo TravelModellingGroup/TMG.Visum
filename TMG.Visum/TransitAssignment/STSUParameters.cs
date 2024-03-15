@@ -37,6 +37,8 @@ public sealed class STSUParameters
     /// </summary>
     public required float DefaultEROWSpeed { get; init; }
 
-
-
+    /// <summary>
+    /// The full path to the filter file to use for this model.
+    /// </summary>
+    public string FilterFileName { get; init; } = string.Empty;
 }

@@ -20,6 +20,7 @@ public class TestDemandTimeSeries
         using var mode = instance.CreateMode("Car", transitSystem);
         using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
         using var demandTimeSeries = demandSegment.DemandTimeSeries;
+        Assert.IsNotNull(demandTimeSeries);
         using var standardTimeSeries = demandTimeSeries.StandardTimeSeries;
         Assert.AreEqual(1, standardTimeSeries.Count);
         var date = 1;
@@ -37,6 +38,7 @@ public class TestDemandTimeSeries
         using var mode = instance.CreateMode("Car", transitSystem);
         using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
         using var demandTimeSeries = demandSegment.DemandTimeSeries;
+        Assert.IsNotNull(demandTimeSeries);
         instance.RemoveDemandTimeSeries(demandTimeSeries);        
     }
 
@@ -50,6 +52,7 @@ public class TestDemandTimeSeries
         {
             using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
             using var demandTimeSeries = demandSegment.DemandTimeSeries;
+            Assert.IsNotNull(demandTimeSeries);
             number = demandTimeSeries.Number;
         }
         instance.RemoveDemandTimeSeries(number);
