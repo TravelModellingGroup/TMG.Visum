@@ -17,17 +17,21 @@ public sealed class EditAttribute : IVisumTool
     [RunParameter("Only Active", false, "Should we assign to all network objects of the type or only the active ones?")]
     public bool OnlyActive;
 
+    [SubModelInformation(Required = false, Description = "A filter file to load before running the edit attribute.")]
+    public FileLocation? FilterFile;
+
     public void Execute(VisumInstance visumInstance)
     {
         try
         {
+            var filterFile = FilterFile?.GetFilePath();
             visumInstance.ExecuteEditAttribute(new EditAttributeParameters()
             {
                 Formula = Formula,
                 NetObjectType = NetObjectType,
                 ResultAttributeName = ResultAttributeName,
                 OnlyActive = OnlyActive,
-            });
+            }, filterFile);
         }
         catch (VisumException e)
         {
