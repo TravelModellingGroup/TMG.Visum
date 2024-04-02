@@ -177,6 +177,27 @@ public sealed partial class VisumInstance : IDisposable
         _visum.Filters.Open(filterFileName);
     }
 
+    /// <summary>
+    /// Remove all filters
+    /// MUST OWN THE WRITE LOCK
+    /// </summary>
+    internal void ResetAllFilters()
+    {
+        var filters = _visum!.Filters;
+        filters.NodeFilter().UseFilter = false;
+        filters.MainNodeFilter().UseFilter = false;
+        filters.LinkFilter().UseFilter = false;
+        filters.TurnFilter().UseFilter = false;
+        var lineGroupFilter = filters.LineGroupFilter();
+        lineGroupFilter.UseFilterForLineRouteItems = false;
+        lineGroupFilter.UseFilterForLineRoutes = false;
+        lineGroupFilter.UseFilterForLines = false;
+        lineGroupFilter.UseFilterForVehJourneys = false;
+        lineGroupFilter.UseFilterForVehJourneySections = false;
+        lineGroupFilter.UseFilterForTimeProfiles = false;
+        lineGroupFilter.UseFilterForTimeProfileItems = false;
+    }
+
     #region IDispose
 
     private bool disposedValue;

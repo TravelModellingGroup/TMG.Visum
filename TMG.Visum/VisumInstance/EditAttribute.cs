@@ -7,12 +7,13 @@ public partial class VisumInstance
     /// Execute an EditAttribute command
     /// </summary>
     /// <param name="parameters">The parameters required to run an edit attribute.</param>
-    public void ExecuteEditAttribute(EditAttributeParameters parameters)
+    /// <param name="filterFile">An optional filter file to use during the edit parameter.</param>
+    public void ExecuteEditAttribute(EditAttributeParameters parameters, string? filterFile = null)
     {
         _lock.EnterWriteLock();
         try
         {
-            ExecuteEditAttributeInternal(parameters);
+            ExecuteEditAttributeInternal(parameters, filterFile);
         }
         finally
         {
@@ -26,12 +27,16 @@ public partial class VisumInstance
     /// </summary>
     /// <param name="parameters"></param>
     /// <exception cref="VisumException"></exception>
-    internal void ExecuteEditAttributeInternal(EditAttributeParameters parameters)
+    internal void ExecuteEditAttributeInternal(EditAttributeParameters parameters, string? filterFile = null)
     {
         string? tempFileName = null;
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
+            if (filterFile is not null)
+            {
+                OpenFilterInner(filterFile);
+            }
             tempFileName = WriteProcedure((writer) =>
             {
                 writer.WriteStartElement("OPERATION");
@@ -53,6 +58,10 @@ public partial class VisumInstance
             });
             // Wipe out the previous procedures and run this.
             RunProceduresFromFileInternal(tempFileName);
+            if (filterFile is not null)
+            {
+                ResetAllFilters();
+            }
         }
         catch (VisumException)
         {
