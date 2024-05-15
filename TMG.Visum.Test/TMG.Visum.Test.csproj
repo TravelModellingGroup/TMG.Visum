@@ -24,6 +24,9 @@
     <None Update="BlankTestFile.ver">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Bus.fil">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestNetwork-Calendar.ver">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
