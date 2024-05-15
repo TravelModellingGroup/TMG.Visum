@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: Visum
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using TMG.Visum.TransitAssignment;
@@ -248,6 +249,92 @@ public partial class VisumInstance
             throw new VisumException($"The demand segment {noMatrix.Name} was not initialized with a demand matrix for assignment!");
         }
 
+    }
+
+    /// <summary>
+    /// TESTING ONLY
+    /// Call this function to test the results of a transit assignment that used STSU.
+    /// </summary>
+    /// <param name="autoCorrelation">The auto correlation factor used in the assignment.</param>
+    /// <param name="defaultSpeed">The default speed used.</param>
+    /// <param name="defaultStopDuration">The dwell time for each stop without considering boardings.</param>
+    /// <param name="autoNetwork">The network to use for getting auto times.</param>
+    /// <param name="error">If false, an error message describing the issue.</param>
+    /// <returns>True if STSU passed all tests, false otherwise with a message.</returns>
+    public bool TestSTSU(float autoCorrelation, float defaultSpeed,
+        float defaultStopDuration, string autoNetwork, [NotNullWhen(false)] ref string? error)
+    {
+
+        /*
+         * We can test if STSU is working by finding all of the links that each transit itinerary takes
+         * and then sum up the travel time across the links.  We then need to sum the number of stops.
+         */
+        ObjectDisposedException.ThrowIf(_visum is null, _visum);
+        var autoTimeAttriubte = $"TCUR_PRTSYS({autoNetwork})";
+        const double maxLinkTime = 9999.0;
+        const double maxDifference = 1.0 / 60.0;
+        var timeProfiles = (object[])_visum.Net.TimeProfiles.GetAll;
+        var links = _visum.Net.Links;
+        HashSet<ILink> usedLinks = new();
+        var any = false;
+        foreach (ITimeProfile timeProfile in timeProfiles)
+        {
+            // Gather all of the links used
+            var items = (object[])timeProfile.TimeProfileItems.GetAll;
+            double totalLinkTime = 0.0;
+            usedLinks.Clear();
+            if(items.Length <= 0)
+            {
+                continue;
+            }
+            var lineRoute = ((ITimeProfileItem)items[0]).LineRouteItem.LineRoute;
+            var lineRouteItems = lineRoute.LineRouteItems;
+            var stsuDistance = 0.0;
+            foreach (ILineRouteItem item in lineRouteItems)
+            {
+                var outLink = item.GetOutLink(_visum);
+                if (outLink is not null
+                    && !usedLinks.Contains(outLink))
+                {
+                    usedLinks.Add(outLink);
+                    stsuDistance += outLink.GetLength();
+                    try
+                    {
+                        var autoTime = (double)outLink.AttValue[autoTimeAttriubte];
+                        // Check to see if the links is not traversal by auto
+                        if (autoTime > maxLinkTime)
+                        {
+                            var length = outLink.GetLength();
+                            autoTime = defaultSpeed * length;
+                        }
+                        totalLinkTime += Math.Floor(autoCorrelation * autoTime);
+                        any = true;
+                    }
+                    catch
+                    { }
+                }
+            }
+            var stsuRunTime = totalLinkTime + defaultStopDuration * (items.Length - 2);
+            var expectedRunTime = ((ITimeProfileItem)items[^1]).GetAccumulatedRunTime();
+            var expectedDistance = ((ITimeProfileItem)items[^1]).GetAccumulatedRunDistance();
+            if (Math.Abs(stsuDistance - expectedDistance) > maxDifference)
+            {
+                error = "Out of distance bounds!";
+                return false;
+            }
+            if (Math.Abs(stsuRunTime - expectedRunTime) > maxDifference)
+            {
+                error = "Out of time bounds!";
+                return false;
+            }
+        }
+        if(!any)
+        {
+            error = "Not Any!";
+            return false;
+        }
+        error = null;
+        return true;
     }
 
 }

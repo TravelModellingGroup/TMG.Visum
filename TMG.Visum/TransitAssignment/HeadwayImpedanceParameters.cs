@@ -419,14 +419,14 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
             // Update Filter
             instance.OpenFilterInner(parameter.FilterFileName);
             instance.SetLineGroupFilterInternal(true);
-            var autoTimes = $"[LINEROUTEITEM\\OUTLINK\\TCUR_PRTSYS({parameter.AutoDemandSegment})]";
+            var autoTimes = $"[TCUR_PRTSYS({parameter.AutoDemandSegment})]";
             // Setup Runtime
             instance.ExecuteEditAttributeInternal(new EditAttributeParameters()
             {
-                NetObjectType = "TIMEPROFILEITEM",
+                NetObjectType = "LINK",
                 OnlyActive = true,
-                ResultAttributeName = "ADDVAL",
-                Formula = $"IF({autoTimes} < 9999, {autoTimes}, 60 * [LINEROUTEITEM\\OUTLINK\\LENGTH] / {parameter.DefaultEROWSpeed})"
+                ResultAttributeName = $"ADDVAL1",
+                Formula = $"IF({autoTimes} < 9999, {autoTimes}, 60 * [LENGTH] / {parameter.DefaultEROWSpeed})"
             });
 
             // Apply to lines in the filter
@@ -434,9 +434,9 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
             {
                 AddValues = false,
                 UpdateRunTime = true,
-                RunTimeTimeProfileItemFactor = parameter.AutoCorrelation,
-                RunTimeTimeProfileItemAttrId = "ADDVAL",
-                RunTimeMethod = "FROMTPIATTR",
+                RunTimeLinkFactor = parameter.AutoCorrelation,
+                RunTimeLinkAttrId = "ADDVAL1",
+                RunTimeMethod = "FROMLINKATTR",
                 RunTimeGuardOnlyActiveLinks = true,
                 OnlyActiveTimeProfileItems = true,
 
