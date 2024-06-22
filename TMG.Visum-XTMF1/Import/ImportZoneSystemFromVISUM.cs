@@ -21,8 +21,6 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     [SubModelInformation(Required = false, Description = "Load in a custom matrix to use for distances.")]
     public IDataSource<SparseTwinIndex<float>>? CustomDistances;
 
-
-
     public IZoneSystem? GiveData()
     {
         return this;
@@ -40,6 +38,10 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
 
     public void LoadData()
     {
+        if(Loaded && KeepLoaded)
+        {
+            return;
+        }
         ((Zone)_roamingZone).ZoneNumber = RoamingZoneNumber;
         LoadZones();
         LoadPlanningDistricts();
