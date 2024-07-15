@@ -426,7 +426,8 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
                 NetObjectType = "LINK",
                 OnlyActive = true,
                 ResultAttributeName = $"ADDVAL1",
-                Formula = $"IF({autoTimes} < 9999, {autoTimes}, 60 * [LENGTH] / {parameter.DefaultEROWSpeed})"
+                // 3600 because VISUM uses seconds for time
+                Formula = $"IF({autoTimes} < 9999, {autoTimes}, 3600 * [LENGTH] / {parameter.DefaultEROWSpeed})"
             });
 
             // Apply to lines in the filter
