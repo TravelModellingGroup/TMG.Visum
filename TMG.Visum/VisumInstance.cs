@@ -38,6 +38,8 @@ public sealed partial class VisumInstance : IDisposable
         {
             _visum = new VISUMLIB.Visum();
             VersionFile = string.Empty;
+            // We need to make sure to clear out the network in case it has been altered if a future load happens.
+            _previouslyLoaded = true;
         }
         catch (Exception ex)
         {
@@ -72,6 +74,11 @@ public sealed partial class VisumInstance : IDisposable
     public string VersionFile { get; private set; }
 
     /// <summary>
+    /// Holds if we have been loaded at least once.
+    /// </summary>
+    private bool _previouslyLoaded = false;
+
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="versionFile">The version file to load.</param>
@@ -82,9 +89,17 @@ public sealed partial class VisumInstance : IDisposable
             _lock.EnterWriteLock();
             ObjectDisposedException.ThrowIf(_visum is null, this);
             VersionFile = Path.GetFullPath(versionFile);
+            if(_previouslyLoaded)
+            {
+                // If we already have a network open make sure to dispose of all of the network elements before trying
+                // to load a new file.
+                var net = _visum.Net;
+                COM.ReleaseCOMObject(ref net);
+            }
             try
             {
                 _visum.LoadVersion(VersionFile);
+                _previouslyLoaded = true;
             }
             catch (Exception ex)
             {
@@ -202,13 +217,21 @@ public sealed partial class VisumInstance : IDisposable
 
     private bool disposedValue;
 
+    private void DisposeVisumInstance()
+    {
+        if (_visum is not null)
+        {
+            COM.ReleaseCOMObject(ref _visum);
+        }
+    }
+
     private void Dispose(bool disposing)
     {
         if (!disposedValue)
         {
             if (disposing)
             {
-                COM.ReleaseCOMObject(ref _visum);
+                DisposeVisumInstance();
                 _lock.Dispose();
             }
             disposedValue = true;
