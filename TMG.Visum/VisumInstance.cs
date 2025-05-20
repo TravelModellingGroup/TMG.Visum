@@ -166,6 +166,16 @@ public sealed partial class VisumInstance : IDisposable
         _visum.Procedures.Execute();
     }
 
+
+    internal void temp()
+    {
+        ObjectDisposedException.ThrowIf(_visum is null, this);
+        foreach (var link in _visum.Net.Links) {
+            
+        }
+            
+    }
+
     /// <summary>
     /// Open a filter file
     /// MUST OWN THE WRITE LOCK

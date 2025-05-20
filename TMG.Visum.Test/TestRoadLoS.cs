@@ -15,8 +15,7 @@ public class TestRoadLoS
         carDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
         carSegment.DemandMatrix = carDemand;
         instance.ExecuteRoadAssignment(carSegment,
-            new RoadAssignment.StabilityCriteria(),
-            new LUCEAssignment());
+            new LUCEAssignment(new StabilityCriteria()));
 
         using var travelTimeMatrix = instance.CalculateRoadLoS(carSegment, PrTLosTypes.TCur);
         Assert.AreEqual("tCur C", travelTimeMatrix.Name);

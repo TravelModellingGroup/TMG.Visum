@@ -7,7 +7,7 @@ namespace TMG.Visum.RoadAssignment;
 /// Linear User Cost Equilibrium (LUCE)
 /// </summary>
 /// <see cref="https://cgi.ptvgroup.com/vision-help/VISUM_2023_ENG/Content/1_Benutzermodell_IV/1_5_Linear_User_Cost_Equilibrium__LUCE_.htm"/>
-public sealed class LUCEAssignment : RoadAssignmentAlgorithm
+public sealed class LUCEAssignment(StabilityCriteria criteria) : EquilibriumRoadAssignmentAlgorithm(criteria)
 {
     public override string VariantName => "LUCE";
 

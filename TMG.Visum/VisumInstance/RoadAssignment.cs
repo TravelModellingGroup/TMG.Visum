@@ -1,22 +1,17 @@
-﻿using System.Globalization;
-using System.Xml;
-using TMG.Visum.RoadAssignment;
+﻿using TMG.Visum.RoadAssignment;
 
 namespace TMG.Visum;
 
 public partial class VisumInstance
 {
-    public void ExecuteRoadAssignment(VisumDemandSegment segment, StabilityCriteria criteria,
-        RoadAssignmentAlgorithm algorithm)
+    public void ExecuteRoadAssignment(VisumDemandSegment segment, RoadAssignmentAlgorithm algorithm)
     {
-        ExecuteRoadAssignment(new List<VisumDemandSegment>(1) { segment }, criteria, algorithm);
+        ExecuteRoadAssignment([segment], algorithm);
     }
 
-    public void ExecuteRoadAssignment(IEnumerable<VisumDemandSegment> demandSegments,
-        StabilityCriteria criteria,
-        RoadAssignmentAlgorithm algorithm)
+    public void ExecuteRoadAssignment(IEnumerable<VisumDemandSegment> demandSegments, RoadAssignmentAlgorithm algorithm)
     {
-        CheckRoadAssignmentParameters(demandSegments, criteria);
+        CheckRoadAssignmentParameters(demandSegments, algorithm);
 
         _lock.EnterWriteLock();
         string? tempFileName = null;
@@ -34,7 +29,7 @@ public partial class VisumInstance
                 writer.WriteStartElement("PRTASSIGNMENTPARA");
                 writer.WriteAttributeString("DSEGSET", string.Join(',', demandSegments.Select(seg => seg.Code)));
                 writer.WriteAttributeString("PRTASSIGNMENTVARIANT", algorithm.VariantName);
-                algorithm.WriteParameters(writer, criteria);
+                algorithm.WriteParameters(writer);
                 // end PRTASSIGNMENTPARA
                 writer.WriteEndElement();
                 // end OPERATION
@@ -62,10 +57,12 @@ public partial class VisumInstance
     }
 
     private static void CheckRoadAssignmentParameters(IEnumerable<VisumDemandSegment> demandSegments,
-        StabilityCriteria criteria)
+        RoadAssignmentAlgorithm algorithm)
     {
         // Before starting check if there are any parameters that don't make sense.
-        criteria.CheckParameters();
+        algorithm.CheckParameters();
+
+        // Throw exception if no demand segments exist
         if (!demandSegments.Any())
         {
             throw new VisumException("There were no demand segments defined!");

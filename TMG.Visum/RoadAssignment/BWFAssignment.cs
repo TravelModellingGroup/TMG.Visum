@@ -7,7 +7,7 @@ namespace TMG.Visum.RoadAssignment;
 /// Bi-conjugate Frank-Wolfe
 /// </summary>
 /// <see cref="https://cgi.ptvgroup.com/vision-help/VISUM_2023_ENG/Content/1_Benutzermodell_IV/1_5_Bi-Conjugate_Verfahren.htm"/>
-public sealed class BWFAssignment : RoadAssignmentAlgorithm
+public sealed class BWFAssignment(StabilityCriteria criteria) : EquilibriumRoadAssignmentAlgorithm(criteria)
 {
     public override string VariantName => "FRANKWOLFE";
 
