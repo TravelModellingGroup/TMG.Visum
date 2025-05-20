@@ -1,8 +1,6 @@
 ﻿// Ignore Spelling: Visum
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection.Metadata;
-using System.Security.Cryptography;
 using TMG.Visum.TransitAssignment;
 
 namespace TMG.Visum;

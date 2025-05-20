@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: visum
 
+using TMG.Visum.Assign.RoadAlgorithms;
 using TMG.Visum.RoadAssignment;
 
 namespace TMG.Visum.Assign;
@@ -7,14 +8,6 @@ namespace TMG.Visum.Assign;
 [ModuleInformation(Description = "Run a road assignment.")]
 public sealed partial class AssignRoadTool : IVisumTool
 {
-    [RunParameter("Maximum Iterations", 100, "The maximum number of iterations to use when balancing the road assignment.", Index = 0)]
-    public int MaximumIterations;
-
-    [RunParameter("Max Gap", 0.01f, "The value is the weighted volume difference between the vehicle impedance of the network of the current iteration and the hypothetical vehicle impedance.", Index = 1)]
-    public float MaxGap;
-
-    [RunParameter("MaxRelative Link Impedance", 0.01f, "The maximum impedance on the link before we stop iterating.", Index = 2)]
-    public float MaxRelativeLinkImpedance;
 
     [SubModelInformation(Required = true, Description = "The demand segments to execute in the road assignment.")]
     public DemandSegmentForAssignment[] DemandSegments = null!;
@@ -28,7 +21,11 @@ public sealed partial class AssignRoadTool : IVisumTool
         try
         {
             segments = GetDemandSegments(instance);
-            instance.ExecuteRoadAssignment(segments, GetCriteria(), GetAssignmentAlgorithm());
+
+            RoadAssignmentAlgorithm alg = 
+                (RoadAssignmentAlgorithm ?? new LUCEAlgorithm()).GetAlgorithm(segments);
+
+            instance.ExecuteRoadAssignment(segments, alg);
         }
         catch (VisumException e)
         {
@@ -74,24 +71,6 @@ public sealed partial class AssignRoadTool : IVisumTool
             .ToList();
     }
 
-    private StabilityCriteria GetCriteria()
-    {
-        return new StabilityCriteria()
-        {
-            MaxIterations = MaximumIterations,
-            MaxGap = MaxGap,
-            MaxRelativeDifferenceLinkImpedance = MaxRelativeLinkImpedance,
-        };
-    }
-
-    private RoadAssignmentAlgorithm GetAssignmentAlgorithm()
-    {
-        if (RoadAssignmentAlgorithm is not null)
-        {
-            return RoadAssignmentAlgorithm.GetAlgorithm();
-        }
-        return new LUCEAssignment() { };
-    }
 
     public bool RuntimeValidation(ref string? error)
     {

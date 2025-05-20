@@ -153,8 +153,7 @@ public class TestTransitAssignment
         demand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
         carSegment.DemandMatrix = demand;
         instance.ExecuteRoadAssignment(carSegment,
-            new RoadAssignment.StabilityCriteria(),
-            new BWFAssignment());
+            new BWFAssignment(new StabilityCriteria()));
         transitSegment.DemandMatrix = demand;
         const float autoCorrelcation = 1.0f;
         // Speeds need to be in kmps not kmph

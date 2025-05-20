@@ -1,5 +1,7 @@
 ﻿// Ignore Spelling: visum
 
+using TMG.Visum.RoadAssignment;
+
 namespace TMG.Visum.Assign;
 
 /// <summary>
@@ -7,7 +9,7 @@ namespace TMG.Visum.Assign;
 /// </summary>
 public abstract class RoadAssignmentAlgorithmModule : IModule
 {
-    internal protected abstract RoadAssignmentAlgorithm GetAlgorithm();
+    internal protected abstract RoadAssignmentAlgorithm GetAlgorithm(List<VisumDemandSegment> demandSegments);
 
     public virtual bool RuntimeValidation(ref string? error)
     {

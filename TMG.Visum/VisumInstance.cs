@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Xml;
-using VISUMLIB;
+﻿using System.Xml;
 
 namespace TMG.Visum;
 
@@ -180,6 +178,7 @@ public sealed partial class VisumInstance : IDisposable
         _visum.Procedures.OpenXmlWithOptions(fileName, ReadFunctions: false, ResetFunctionsBeforeReading: false);
         _visum.Procedures.Execute();
     }
+
 
     /// <summary>
     /// Open a filter file
