@@ -13,37 +13,35 @@ namespace TMG.Visum.Assign.RoadAlgorithms
         [RunParameter("MaxRelative Link Impedance", 0.01f, "The maximum impedance on the link before we stop iterating.", Index = 2)]
         public float MaxRelativeLinkImpedance;
 
-        protected StabilityCriteria stabilityCriteria;
 
-        protected EquilibriumAlgorithmRoot()
-        {
-            stabilityCriteria = new()
+        protected StabilityCriteria GetStabilityCriteria() =>
+            new()
             {
                 MaxIterations = MaximumIterations,
                 MaxGap = MaxGap,
                 MaxRelativeDifferenceLinkImpedance = MaxRelativeLinkImpedance
             };
-        }
+        
     }
 
     [ModuleInformation(Description = "Use the standard Equilibrium assignment.")]
     public sealed class EquilibriumAlgorithm : EquilibriumAlgorithmRoot
     {
         protected internal override RoadAssignmentAlgorithm GetAlgorithm(List<VisumDemandSegment> _) => 
-            new EquilibriumAssignment(stabilityCriteria) { };
+            new EquilibriumAssignment(GetStabilityCriteria()) { };
     }
 
     [ModuleInformation(Description = "Use the Equilibrium assignment Bi-conjugate Frank-Wolfe.")]
     public sealed class BiConjugateFrankWolfeAlgorithm : EquilibriumAlgorithmRoot
     {
         protected internal override RoadAssignmentAlgorithm GetAlgorithm(List<VisumDemandSegment> _) =>
-            new BWFAssignment(stabilityCriteria) { };  
+            new BWFAssignment(GetStabilityCriteria()) { };  
     }
 
     [ModuleInformation(Description = "Use the Equilibrium assignment LUCE.")]
     public sealed class LUCEAlgorithm : EquilibriumAlgorithmRoot
     {
         protected internal override RoadAssignmentAlgorithm GetAlgorithm(List<VisumDemandSegment> _) => 
-            new LUCEAssignment(stabilityCriteria) { };
+            new LUCEAssignment(GetStabilityCriteria()) { };
     }
 }
