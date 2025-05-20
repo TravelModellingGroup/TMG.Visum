@@ -1,5 +1,5 @@
-﻿using System.Xml;
-using TMG.Visum;
+﻿using System.Globalization;
+using System.Xml;
 
 namespace TMG.Visum.RoadAssignment;
 
@@ -64,7 +64,7 @@ public sealed class BicycleAssignment(List<VisumDemandSegment> demandSegments) :
         writer.WriteStartElement("BICYCLESTOCHSEARCHPARA");
 
         writer.WriteStartElement("BICYCLESTOCHRANDOMPARA");
-        writer.WriteAttributeString("NUMSEARCHITER", NumSearchIterations.ToString());
+        writer.WriteAttributeString("NUMSEARCHITER", NumSearchIterations.ToString(CultureInfo.InvariantCulture));
         writer.WriteAttributeString("SIGMACOEFF", "6");
         writer.WriteAttributeString("SIGMAIMPEXP", "0.5");
         writer.WriteEndElement();
@@ -87,15 +87,17 @@ public sealed class BicycleAssignment(List<VisumDemandSegment> demandSegments) :
         writer.WriteAttributeString("MAXT0DELTA", "300");
         writer.WriteEndElement();
 
+        string beta = Beta.ToString(CultureInfo.InvariantCulture);
+
         writer.WriteStartElement("STOCHCHOICEPARA");
-        writer.WriteAttributeString("BOXCOXEXP", Beta.ToString());
+        writer.WriteAttributeString("BOXCOXEXP", beta);
         writer.WriteAttributeString("BOXCOXPARA", "0.5");
         writer.WriteAttributeString("CHOICEMODEL", Enum.GetName(ChoiceModel));
         writer.WriteAttributeString("IMPSCALINGDIVISOR", "1");
         writer.WriteAttributeString("INDEPENDENCECALCEXACTLY", "1");
         writer.WriteAttributeString("INDEPENDENCEVIAT0", "0");
         writer.WriteAttributeString("KIRCHHOFFEXP", "4");
-        writer.WriteAttributeString("LOGITEXP", Beta.ToString());
+        writer.WriteAttributeString("LOGITEXP", beta);
         writer.WriteAttributeString("LOHSEEXP", "4");
         writer.WriteAttributeString("LOHSEVARIABLEBETAKAPPA", "10");
         writer.WriteAttributeString("LOHSEVARIABLEBETALAMBDA", "0.8");
