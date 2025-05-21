@@ -17,11 +17,11 @@ public class TestRoadLoS
         instance.ExecuteRoadAssignment(carSegment,
             new LUCEAssignment(new StabilityCriteria()));
 
-        using var travelTimeMatrix = instance.CalculateRoadLoS(carSegment, PrTLosTypes.TCur);
+        using var travelTimeMatrix = instance.CalculateRoadLoS(carSegment, PrTLosTypes.TCur, PrTLoSSearchCriterion.Impedance);
         Assert.AreEqual("tCur C", travelTimeMatrix.Name);
         Assert.AreEqual(3, travelTimeMatrix.Rows);
         Assert.AreEqual(3, travelTimeMatrix.Columns);
-        using var uncongestedTravelTimeMatrix = instance.CalculateRoadLoS(carSegment, PrTLosTypes.T0);
+        using var uncongestedTravelTimeMatrix = instance.CalculateRoadLoS(carSegment, PrTLosTypes.T0, PrTLoSSearchCriterion.Impedance);
         Assert.AreEqual("t0 C", uncongestedTravelTimeMatrix.Name);
         Assert.AreEqual(3, uncongestedTravelTimeMatrix.Rows);
         Assert.AreEqual(3, uncongestedTravelTimeMatrix.Columns);

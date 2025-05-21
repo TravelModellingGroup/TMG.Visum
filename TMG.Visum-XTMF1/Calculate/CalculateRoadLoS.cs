@@ -12,6 +12,9 @@ public sealed class CalculateRoadLoS : IVisumTool
     [SubModelInformation(Required = true, Description = "The demand segment to calculate PrT for.")]
     public DemandSegmentForAssignment Segment = null!;
 
+    [RunParameter("Search Criterion", PrTLoSSearchCriterion.Impedance, "The search criterion to use for the matrix.")]
+    public PrTLoSSearchCriterion SearchCriterion;
+
     public class PrTLoSExport : IModule
     {
         [RunParameter("PrT Matrix Type", PrTLosTypes.TCur, "The type of matrix to compute from the previous road assignment.")]
@@ -45,7 +48,7 @@ public sealed class CalculateRoadLoS : IVisumTool
         try
         {
             segment = GetSegment(instance);
-            List<VisumMatrix> matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type).ToList());
+            List<VisumMatrix> matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type).ToList(), SearchCriterion);
             for (int i = 0; i < matrices.Count; i++)
             {
                 if (!string.IsNullOrWhiteSpace(ToExport[i].MatrixCode))

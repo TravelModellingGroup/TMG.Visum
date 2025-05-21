@@ -11,7 +11,7 @@ public partial class VisumInstance
     /// <param name="segment">The demand segment to process.</param>
     /// <param name="types">The different types of PrT skims to generate.</param>
     /// <exception cref="VisumException">Can throw an exception if VISUM has an issue when processing the command.</exception>
-    public List<VisumMatrix> CalculateRoadLoS(VisumDemandSegment segment, List<RoadAssignment.PrTLosTypes> types)
+    public List<VisumMatrix> CalculateRoadLoS(VisumDemandSegment segment, List<RoadAssignment.PrTLosTypes> types, PrTLoSSearchCriterion searchCriterion)
     {
         string? tempFileName = null;
         try
@@ -38,7 +38,7 @@ public partial class VisumInstance
                 writer.WriteAttributeString("DSEG", segment.Code);
                 writer.WriteAttributeString("FORMAT", "V");
                 writer.WriteAttributeString("ONLYRELATIONSWITHDEMAND", "0");
-                writer.WriteAttributeString("SEARCHCRITERION", "Impedance");
+                writer.WriteAttributeString("SEARCHCRITERION", Enum.GetName(searchCriterion));
                 writer.WriteAttributeString("SELECTODRELATIONTYPE", "All");
                 writer.WriteAttributeString("SEPARATOR", "Blank");
                 writer.WriteAttributeString("SUMUPDESTCONNS", "1");
@@ -98,10 +98,23 @@ public partial class VisumInstance
     /// <param name="demandSegment">The demand segment to process.</param>
     /// <param name="type">The PrT Skim matrix to generate.</param>
     /// <exception cref="VisumException">Can throw an exception if VISUM has an issue when processing the command.</exception>
-    public VisumMatrix CalculateRoadLoS(VisumDemandSegment demandSegment, PrTLosTypes type)
+    public VisumMatrix CalculateRoadLoS(VisumDemandSegment demandSegment, PrTLosTypes type, PrTLoSSearchCriterion searchCriterion)
     {
-        return CalculateRoadLoS(demandSegment, [type])[0];
+        return CalculateRoadLoS(demandSegment, [type], searchCriterion)[0];
     }
 
 }
 
+public enum PrTLoSSearchCriterion
+{   /// <summary>The distance between the origin and destination</summary>
+    Distance,
+    /// <summary>The impedance between the origin and destination</summary>
+    Impedance,
+    /// <summary>The free-flow travel time between the origin and destination</summary>
+    t0,
+    /// <summary>The current travel time between the origin and destination</summary>
+    tCur,
+    AddVal1,
+    AddVal2,
+    AddVal3
+}
