@@ -5,8 +5,10 @@ public partial class VisumInstance
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="filePath"></param>
-    public void ExportShapeFile(string filePath, ShapeFileType type)
+    /// <param name="filePath">The path to save the shape file to.</param>
+    /// <param name="type">The type of parameters to export</param>
+    /// <param name="extraAttributes">A list of additional extra attributes to export.</param>
+    public void ExportShapeFile(string filePath, ShapeFileType type, Span<string> extraAttributes)
     {
         _lock.EnterReadLock();
         try
@@ -15,7 +17,15 @@ public partial class VisumInstance
             var fullPath = Path.GetFullPath(filePath);
             var parameters = _visum.IO.CreateExportShapeFilePara();
             parameters.ObjectType = type.ToInternalType();
-            
+            if(type == ShapeFileType.Link)
+            {
+                // Set the links to be directed by default
+                parameters.AttValue["Directed"] = 1;
+            }
+            foreach (var attr in extraAttributes)
+            {
+                parameters.AddColumn(attr);
+            }
             _visum.IO.ExportShapefile(fullPath, parameters);
             COM.ReleaseCOMObject(ref parameters);
         }
