@@ -8,7 +8,8 @@ public partial class VisumInstance
     /// <param name="filePath">The path to save the shape file to.</param>
     /// <param name="type">The type of parameters to export</param>
     /// <param name="extraAttributes">A list of additional extra attributes to export.</param>
-    public void ExportShapeFile(string filePath, ShapeFileType type, Span<string> extraAttributes)
+    /// <param name="exclusivelyExtraAttributes">Should we only export the specified attributes?</param>
+    public void ExportShapeFile(string filePath, ShapeFileType type, Span<string> extraAttributes, bool exclusivelyExtraAttributes)
     {
         _lock.EnterReadLock();
         try
@@ -21,6 +22,11 @@ public partial class VisumInstance
             {
                 // Set the links to be directed by default
                 parameters.AttValue["Directed"] = 1;
+            }
+            if (exclusivelyExtraAttributes)
+            {
+                // If we only want the extra attributes, we clear the default attributes
+                parameters.ClearLayout();
             }
             foreach (var attr in extraAttributes)
             {
