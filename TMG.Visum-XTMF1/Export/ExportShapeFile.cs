@@ -59,6 +59,11 @@ public sealed class ExportShapeFile : IVisumTool
             error = $"The type {Enum.GetName(Type)} is not a valid ShapeFile type.";
             return false;
         }
+        if (ExclusivelyExtraAttributes && ExtraAttributes.Length == 0)
+        {
+            error = "You cannot export exclusively extra attributes without specifying at least one extra attribute.";
+            return false;
+        }
         return true;
     }
 
