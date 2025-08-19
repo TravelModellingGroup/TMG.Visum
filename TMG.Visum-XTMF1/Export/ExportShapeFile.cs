@@ -11,6 +11,8 @@ public sealed class ExportShapeFile : IVisumTool
     [SubModelInformation(Required = true, Description = "The root name of the ShapeFile to save to.")]
     public FileLocation SaveTo = null!;
 
+    [RunParameter("Exclusively Extra Attributes", true, "Should we only export the specified extra attributes? If false all attributes specified in the network object type's list view will be exported.")]
+    public bool ExclusivelyExtraAttributes;
 
     [ModuleInformation(Description = "")]
     public sealed class ExtraAttribute : IModule
@@ -42,7 +44,7 @@ public sealed class ExportShapeFile : IVisumTool
     {
         try
         {
-            visumInstance.ExportShapeFile(SaveTo, Type, ExtraAttributes.Select(e => e.AttributeName).ToArray());
+            visumInstance.ExportShapeFile(SaveTo, Type, ExtraAttributes.Select(e => e.AttributeName).ToArray(), ExclusivelyExtraAttributes);
         }
         catch (Exception ex)
         {
@@ -55,6 +57,11 @@ public sealed class ExportShapeFile : IVisumTool
         if(!Enum.IsDefined<ShapeFileType>(Type))
         {
             error = $"The type {Enum.GetName(Type)} is not a valid ShapeFile type.";
+            return false;
+        }
+        if (ExclusivelyExtraAttributes && ExtraAttributes.Length == 0)
+        {
+            error = "You cannot export exclusively extra attributes without specifying at least one extra attribute.";
             return false;
         }
         return true;
