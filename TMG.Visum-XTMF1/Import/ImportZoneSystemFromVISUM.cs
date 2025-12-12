@@ -1,4 +1,6 @@
-﻿using TMG.Visum.Common;
+﻿using System.Threading;
+using TMG.Functions;
+using TMG.Visum.Common;
 
 namespace TMG.Visum.Import;
 
@@ -18,8 +20,14 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     [SubModelInformation(Required = false, Description = "Load in a population for TAZ.")]
     public IDataSource<SparseArray<float>>? Population;
 
-    [SubModelInformation(Required = false, Description = "Load in a custom matrix to use for distances.")]
-    public IDataSource<SparseTwinIndex<float>>? CustomDistances;
+    //[SubModelInformation(Required = false, Description = "Load in a custom matrix to use for distances.")]
+    //public IDataSource<SparseTwinIndex<float>>? CustomDistances;
+
+    [SubModelInformation(Required = true, Description = "The demand segment within Visum for the car mode.")]
+    public DemandSegmentForAssignment VisumAutoSegment = null!;
+
+    [RunParameter("Convert distances from km to m", true, "Should we multiply the Visum distances by 1k to convert from km to m?")]
+    public bool ConvertToM;
 
     public IZoneSystem? GiveData()
     {
@@ -179,33 +187,38 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     /// </summary>
     private SparseTwinIndex<float> LoadDistances()
     {
-        if (CustomDistances is not null)
-        {
-            if (!CustomDistances.Loaded)
-            {
-                CustomDistances.LoadData();
-            }
-            return CustomDistances.GiveData()!;
-        }
+        //if (CustomDistances is not null)
+        //{
+        //    if (!CustomDistances.Loaded)
+        //    {
+        //        CustomDistances.LoadData();
+        //    }
+        //    return CustomDistances.GiveData()!;
+        //}
+        
+        //Get data from VISUM road LOS
+        var visum = VisumInstance.GiveData();
+            
+        //get the auto segment
+        var segment = visum!.GetDemandSegment(VisumAutoSegment.Code);
+        
+        //calculate road distances with free-flow traffic
+        var mats = visum!.CalculateRoadLoS(segment, [RoadAssignment.PrTLosTypes.TripDistance], PrTLoSSearchCriterion.t0);    
+        var omat = mats[0].GetValuesAsFloatMatrix();
+
+        //get indexed format
+        var distances = _zones!.CreateSquareTwinArray<float>();
+        var dmat = distances.GetFlatData();
+
+        //copy to index format, converting from km to m
+        if (ConvertToM)
+            for (int i = 0; i < dmat.Length; i++)
+                VectorHelper.Multiply(dmat[i], 0, omat[i], 0, 1000.0f, dmat[i].Length);
         else
-        {
-            // If there are no distances compute straight line distances between zones
-            var flatZones = _zones!.GetFlatData();
-            var distances = _zones.CreateSquareTwinArray<float>();
-            var flatDistances = distances.GetFlatData();
-            var x = flatZones.Select(z => z!.X).ToArray();
-            var y = flatZones.Select(z => z!.Y).ToArray();
-            for (var i = 0; i < flatDistances.Length; i++)
-            {
-                for (var j = 0; j < flatDistances[i].Length; j++)
-                {
-                    var deltaX = x[i] - x[j];
-                    var deltaY = y[i] - y[j];
-                    flatDistances[i][j] = MathF.Sqrt(deltaX * deltaX + deltaY * deltaY);
-                }
-            }
-            return distances;
-        }
+            omat.CopyTo(dmat, 0);
+
+    
+        return distances;
     }
 
     /// <summary>

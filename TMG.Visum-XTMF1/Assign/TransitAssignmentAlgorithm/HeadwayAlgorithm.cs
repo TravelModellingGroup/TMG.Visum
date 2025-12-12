@@ -108,6 +108,9 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
         [RunParameter("Default EROW Speed", 20.0f, "The speed that transit lines will travel at that belong to this STSU Class.")]
         public float DefaultEROWSpeed;
 
+        [RunParameter("Attribute for Bus Facility", "ExclusiveBusFacility", "The name of the boolean Links attribute in Visum that indicated whether the link has an exclusive bus facility.")]
+        public string ExclusiveBusFacilityAttribute = null!;
+
         [SubModelInformation(Required = true, Description = "The filter used to select lines to apply the calculation to.")]
         public FileLocation FilterFile = null!;
 
@@ -198,6 +201,7 @@ public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
                 DefaultEROWSpeed = x.DefaultEROWSpeed,
                 StopDuration = x.DefaultDuration,
                 FilterFileName = x.FilterFile.GetFilePath(),
+                BusFacilityAttributeName = x.ExclusiveBusFacilityAttribute
             })
             .ToArray();
     }
