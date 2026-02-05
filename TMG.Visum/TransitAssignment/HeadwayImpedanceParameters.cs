@@ -429,8 +429,8 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
                 OnlyActive = true,
                 ResultAttributeName = $"ADDVAL1",
                 // 3600 because VISUM uses seconds for time
-                Formula = "IF(([{autoTimes}] < 9999)" + 
-                    (string.IsNullOrEmpty(hasBusFacility) ? "" : $"(& ![{hasBusFacility}]") + 
+                Formula = $"IF(([{autoTimes}] < 9999)" + 
+                    (string.IsNullOrEmpty(hasBusFacility) ? "" : $" & ![{hasBusFacility}]") + 
                     $", [{autoTimes}], 3600 * [LENGTH] / {parameter.DefaultEROWSpeed})"
             });
 
