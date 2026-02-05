@@ -21,10 +21,10 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     public IDataSource<SparseArray<float>>? Population;
 
     [SubModelInformation(Required = false, Description = "Load in a custom matrix to use for interzonal distances. Cannot use with VisumAutoSegment")]
-    public IDataSource<SparseTwinIndex<float>>? CustomDistances = null!;
+    public IDataSource<SparseTwinIndex<float>>? CustomDistances;
 
     [SubModelInformation(Required = false, Description = "The demand segment within Visum for the car mode to calculate interzonal distances. Cannot use with CustomDistances")]
-    public DemandSegmentForAssignment VisumAutoSegment = null!;
+    public DemandSegmentForAssignment? VisumAutoSegment;
 
     [RunParameter("Convert distances from km to m", true, "Should we multiply the Visum distances by 1k to convert from km to m? Only used when loading from Visum")]
     public bool ConvertToM;

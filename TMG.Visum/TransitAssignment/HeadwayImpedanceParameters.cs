@@ -419,8 +419,9 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
             // Update Filter
             instance.OpenFilterInner(parameter.FilterFileName);
             instance.SetLineGroupFilterInternal(true);
-            var autoTimes = $"[TCUR_PRTSYS({parameter.AutoDemandSegment})]";
-            var hasBusFacility = $"[{parameter.BusFacilityAttributeName}]";
+            var autoTimes = $"TCUR_PRTSYS({parameter.AutoDemandSegment})";
+            var hasBusFacility = parameter.BusFacilityAttributeName;
+
             // Setup Runtime
             instance.ExecuteEditAttributeInternal(new EditAttributeParameters()
             {
@@ -428,8 +429,9 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
                 OnlyActive = true,
                 ResultAttributeName = $"ADDVAL1",
                 // 3600 because VISUM uses seconds for time
-                Formula = $"IF((!{hasBusFacility} & ({autoTimes} < 9999)), {autoTimes}, 3600 * [LENGTH] / {parameter.DefaultEROWSpeed})"
-
+                Formula = "IF(([{autoTimes}] < 9999)" + 
+                    (string.IsNullOrEmpty(hasBusFacility) ? "" : $"(& ![{hasBusFacility}]") + 
+                    $", [{autoTimes}], 3600 * [LENGTH] / {parameter.DefaultEROWSpeed})"
             });
 
             // Apply to lines in the filter
