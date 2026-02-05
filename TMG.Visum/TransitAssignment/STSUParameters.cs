@@ -41,4 +41,9 @@ public sealed class STSUParameters
     /// The full path to the filter file to use for this model.
     /// </summary>
     public string FilterFileName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The name of the boolean Link attribute to determine whether the link contains an exclusive bus facility
+    /// </summary>
+    public required string BusFacilityAttributeName {  get; init; }
 }

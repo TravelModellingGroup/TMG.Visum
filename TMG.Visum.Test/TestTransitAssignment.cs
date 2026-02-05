@@ -176,7 +176,8 @@ public class TestTransitAssignment
                         AutoDemandSegment = "C",
                         DefaultEROWSpeed = defaultSpeed,
                         StopDuration = defaultStopDuration,
-                        FilterFileName = "Bus.fil"
+                        FilterFileName = "Bus.fil",
+                        BusFacilityAttributeName = "ExclusiveBusFacility"
                     }
                 ]
             });

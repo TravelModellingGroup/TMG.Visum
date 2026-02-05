@@ -391,7 +391,7 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
                 NetObjectType = "TIMEPROFILEITEM",
                 OnlyActive = true,
                 ResultAttributeName = "ADDVAL",
-                Formula = $"IF(MAX([ALIGHT],[BOARD]) > 0,{parameter.StopDuration} + ([LINEROUTEITEM\\PASSALIGHT(AP)] * {parameter.AlightingDuration} + [LINEROUTEITEM\\PASSBOARD(AP)] * {parameter.BoardingDuration})*([{numberOfHours} * 60.0 / // {HeadwayAttribute}]),0)",
+                Formula = $"IF(MAX([ALIGHT],[BOARD]) > 0,{parameter.StopDuration} + ([PASSALIGHT(AP)] * {parameter.AlightingDuration} + [PASSBOARD(AP)] * {parameter.BoardingDuration})/({numberOfHours} * 3600.0 / [TIMEPROFILE\\{HeadwayAttribute}]),0)",
             });
 
             // Apply to lines in the filter
@@ -419,7 +419,9 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
             // Update Filter
             instance.OpenFilterInner(parameter.FilterFileName);
             instance.SetLineGroupFilterInternal(true);
-            var autoTimes = $"[TCUR_PRTSYS({parameter.AutoDemandSegment})]";
+            var autoTimes = $"TCUR_PRTSYS({parameter.AutoDemandSegment})";
+            var hasBusFacility = parameter.BusFacilityAttributeName;
+
             // Setup Runtime
             instance.ExecuteEditAttributeInternal(new EditAttributeParameters()
             {
@@ -427,7 +429,9 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
                 OnlyActive = true,
                 ResultAttributeName = $"ADDVAL1",
                 // 3600 because VISUM uses seconds for time
-                Formula = $"IF({autoTimes} < 9999, {autoTimes}, 3600 * [LENGTH] / {parameter.DefaultEROWSpeed})"
+                Formula = $"IF(([{autoTimes}] < 9999)" + 
+                    (string.IsNullOrEmpty(hasBusFacility) ? "" : $" & ![{hasBusFacility}]") + 
+                    $", [{autoTimes}], 3600 * [LENGTH] / {parameter.DefaultEROWSpeed})"
             });
 
             // Apply to lines in the filter

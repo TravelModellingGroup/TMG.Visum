@@ -94,7 +94,7 @@ public sealed class BicycleAssignment(List<VisumDemandSegment> demandSegments) :
         writer.WriteAttributeString("BOXCOXPARA", "0.5");
         writer.WriteAttributeString("CHOICEMODEL", Enum.GetName(ChoiceModel));
         writer.WriteAttributeString("IMPSCALINGDIVISOR", "1");
-        writer.WriteAttributeString("INDEPENDENCECALCEXACTLY", "1");
+        writer.WriteAttributeString("INDEPENDENCECALCEXACTLY", "0");
         writer.WriteAttributeString("INDEPENDENCEVIAT0", "0");
         writer.WriteAttributeString("KIRCHHOFFEXP", "4");
         writer.WriteAttributeString("LOGITEXP", beta);
