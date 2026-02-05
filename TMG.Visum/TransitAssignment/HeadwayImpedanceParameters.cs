@@ -391,7 +391,7 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
                 NetObjectType = "TIMEPROFILEITEM",
                 OnlyActive = true,
                 ResultAttributeName = "ADDVAL",
-                Formula = $"IF(MAX([ALIGHT],[BOARD]) > 0,{parameter.StopDuration} + ([LINEROUTEITEM\\PASSALIGHT(AP)] * {parameter.AlightingDuration} + [LINEROUTEITEM\\PASSBOARD(AP)] * {parameter.BoardingDuration})*([{numberOfHours} * 60.0 / // {HeadwayAttribute}]),0)",
+                Formula = $"IF(MAX([ALIGHT],[BOARD]) > 0,{parameter.StopDuration} + ([PASSALIGHT(AP)] * {parameter.AlightingDuration} + [PASSBOARD(AP)] * {parameter.BoardingDuration})/({numberOfHours} * 3600.0 / [TIMEPROFILE\\{HeadwayAttribute}]),0)",
             });
 
             // Apply to lines in the filter
