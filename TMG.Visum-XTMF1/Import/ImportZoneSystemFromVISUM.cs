@@ -26,7 +26,7 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     [SubModelInformation(Required = false, Description = "The demand segment within Visum for the car mode to calculate interzonal distances. Cannot use with CustomDistances")]
     public DemandSegmentForAssignment VisumAutoSegment = null!;
 
-    [RunParameter("Convert distances from km to m", true, "Should we multiply the Visum distances by 1k to convert from km to m?")]
+    [RunParameter("Convert distances from km to m", true, "Should we multiply the Visum distances by 1k to convert from km to m? Only used when loading from Visum")]
     public bool ConvertToM;
 
     public IZoneSystem? GiveData()
