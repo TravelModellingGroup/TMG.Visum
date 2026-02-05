@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using TMG.Functions;
+﻿using TMG.Functions;
 using TMG.Visum.Common;
 
 namespace TMG.Visum.Import;
@@ -205,7 +204,7 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
         var visum = VisumInstance.GiveData();
 
         //get the auto segment
-        var segment = visum!.GetDemandSegment(VisumAutoSegment.Code);
+        var segment = visum!.GetDemandSegment(VisumAutoSegment!.Code);
 
         //calculate road distances with free-flow traffic
         var mats = visum!.CalculateRoadLoS(segment, [RoadAssignment.PrTLosTypes.TripDistance], PrTLoSSearchCriterion.t0);
