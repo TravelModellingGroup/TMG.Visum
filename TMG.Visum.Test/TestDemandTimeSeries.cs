@@ -9,7 +9,6 @@ public class TestDemandTimeSeries
         using var instance = new VisumInstance("TestNetwork.ver");
         using var timeSeries = instance.GetStandardTimeSeries(1);
         using var demandTimeSeries = instance.CreateDemandTimeSeries("code", "name", timeSeries);
-        instance.SaveVersionFile(@"C:\Users\James\Documents\temp\Test.ver");
     }
 
     [TestMethod]

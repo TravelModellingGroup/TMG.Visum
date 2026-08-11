@@ -11,11 +11,14 @@ public sealed class CreateUserAttribute : IVisumTool
     [RunParameter("Network Object Type", NetworkObjectType.Node, "The of network object to create the attribute for.")]
     public NetworkObjectType NetworkObjectType;
 
+    [RunParameter("Attribute Type", AttributeTypes.Float, "The type of the attribute to create.")]
+    public AttributeTypes AttributeType;
+
     public void Execute(VisumInstance visumInstance)
     {
         try
         {
-            visumInstance.CreateAttributeIfDoesNotExist(AttributeName, NetworkObjectType);
+            visumInstance.CreateAttributeIfDoesNotExist(AttributeName, NetworkObjectType, AttributeType);
         }
         catch (VisumException e)
         {
