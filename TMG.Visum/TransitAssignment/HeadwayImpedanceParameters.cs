@@ -459,7 +459,7 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
     {
         if (RequiresTempAttribute())
         {
-            instance.CreateAttributeIfDoesNotExistInternal(TempAttributeName, NetworkObjectType.TimeProfile);
+            instance.CreateAttributeIfDoesNotExistInternal(TempAttributeName, NetworkObjectType.TimeProfile, AttributeTypes.Float);
         }
     }
 

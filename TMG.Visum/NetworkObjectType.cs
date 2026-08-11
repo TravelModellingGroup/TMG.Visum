@@ -35,23 +35,35 @@ internal static class NetworkObjectTypeHelper
         };
     }
 
+    internal static VISUMLIB.ValueType GetValueType(this AttributeTypes attributeType)
+    {
+        return attributeType switch
+        {
+            AttributeTypes.Float => VISUMLIB.ValueType.ValueType_Real,
+            AttributeTypes.String => VISUMLIB.ValueType.ValueType_String,
+            AttributeTypes.Integer => VISUMLIB.ValueType.ValueType_Int,
+            _ => throw new NotImplementedException("Unknown AttributeTypes"),
+        };
+    }
+
     /// <summary>
     /// WRITE LOCK REQUIRED
     /// </summary>
     /// <param name="name">The name of the attribute to create.</param>
     /// <param name="netObjectType">The type of attribute to create.</param>
-    internal static void CreateAttributeInternal(this NetworkObjectType type, IVisum instance, string name)
+    internal static void CreateAttributeInternal(this NetworkObjectType type, IVisum instance, string name, AttributeTypes attributeType)
     {
+        var convertedType = GetValueType(attributeType);
         switch (type)
         {
             case NetworkObjectType.Node:
-                instance.Net.Nodes.AddUserDefinedAttribute(name, name, name, VISUMLIB.ValueType.ValueType_Real);
+                instance.Net.Nodes.AddUserDefinedAttribute(name, name, name, convertedType);
                 break;
             case NetworkObjectType.Link:
-                instance.Net.Links.AddUserDefinedAttribute(name, name, name, VISUMLIB.ValueType.ValueType_Real);
+                instance.Net.Links.AddUserDefinedAttribute(name, name, name, convertedType);
                 break;
             case NetworkObjectType.TimeProfile:
-                instance.Net.TimeProfiles.AddUserDefinedAttribute(name, name, name, VISUMLIB.ValueType.ValueType_Real);
+                instance.Net.TimeProfiles.AddUserDefinedAttribute(name, name, name, convertedType);
                 break;
             default:
                 throw new NotImplementedException("Unknown NetworkObjectType");

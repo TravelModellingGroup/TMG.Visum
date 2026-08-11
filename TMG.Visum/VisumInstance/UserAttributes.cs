@@ -28,12 +28,12 @@ public partial class VisumInstance
     /// </summary>
     /// <param name="name">The name of the attribute to create if it doesn't already exist.</param>
     /// <param name="netObjectType">The type of network object that this will be associated with.</param>
-    public void CreateAttributeIfDoesNotExist(string name, NetworkObjectType netObjectType)
+    public void CreateAttributeIfDoesNotExist(string name, NetworkObjectType netObjectType, AttributeTypes attributeType)
     {
         _lock.EnterWriteLock();
         try
         {
-            CreateAttributeIfDoesNotExistInternal(name, netObjectType);
+            CreateAttributeIfDoesNotExistInternal(name, netObjectType, attributeType);
         }
         finally
         {
@@ -45,11 +45,11 @@ public partial class VisumInstance
     /// REQUIRES WRITE LOCK
     /// </summary>
     /// <param name="name">The name of the attribute to create.</param>
-    internal void CreateAttributeIfDoesNotExistInternal(string name, NetworkObjectType netObjectType)
+    internal void CreateAttributeIfDoesNotExistInternal(string name, NetworkObjectType netObjectType, AttributeTypes attributeType)
     {
         if (!TryGetAttributeInternal(name, netObjectType, out var at))
         {
-            netObjectType.CreateAttributeInternal(_visum!, name);
+            netObjectType.CreateAttributeInternal(_visum!, name, attributeType);
         }
         else
         {
