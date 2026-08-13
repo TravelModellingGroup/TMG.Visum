@@ -21,16 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Assign\" />
-    <Folder Include="Calculate\" />
-    <Folder Include="Edit\" />
-    <Folder Include="Export\" />
-    <Folder Include="Import\" />
-    <Folder Include="Load\" />
-    <Folder Include="Save\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\TMG.Visum\TMG.Visum.csproj" />
   </ItemGroup>
 
