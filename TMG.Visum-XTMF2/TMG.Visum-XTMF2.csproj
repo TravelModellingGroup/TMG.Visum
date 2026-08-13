@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>TMG.Visum</RootNamespace>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	  <OutputPath>..\..\XTMF2-Dev\Modules\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="TMG-Framework">
+      <HintPath>..\..\XTMF2-Dev\Modules\TMG-Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="XTMF2.Interfaces">
+      <HintPath>..\..\XTMF2-Dev\Modules\XTMF2.Interfaces.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TMG.Visum\TMG.Visum.csproj" />
+  </ItemGroup>
+
+</Project>
