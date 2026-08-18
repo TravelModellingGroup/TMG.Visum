@@ -12,9 +12,9 @@ internal static class LinkExtensions
     /// </summary>
     /// <param name="us">The link to operate on.</param>
     /// <returns></returns>
-    public static INode? GetFromNode(this ILink us)
+    public static dynamic? GetFromNode(object us)
     {
-        return us.AttValue["FromNode"] as INode;
+        return ((dynamic)us).AttValue["FromNode"];
     }
 
     /// <summary>
@@ -22,9 +22,9 @@ internal static class LinkExtensions
     /// </summary>
     /// <param name="us">The link to operate on.</param>
     /// <returns></returns>
-    public static ILeg? GetFromLeg(this ILink us)
+    public static dynamic? GetFromLeg(object us)
     {
-        return us.AttValue["FromNodeLeg"] as ILeg;
+        return ((dynamic)us).AttValue["FromNodeLeg"];
     }
 
     /// <summary>
@@ -32,9 +32,9 @@ internal static class LinkExtensions
     /// </summary>
     /// <param name="us">The link to operate on.</param>
     /// <returns></returns>
-    public static INode? GetToNode(this ILink us)
+    public static dynamic? GetToNode(object us)
     {
-        return us.AttValue["ToNode"] as INode;
+        return ((dynamic)us).AttValue["ToNode"];
     }
 
     /// <summary>
@@ -42,9 +42,9 @@ internal static class LinkExtensions
     /// </summary>
     /// <param name="us"></param>
     /// <returns></returns>
-    public static ILeg? ToNodeLeg(this ILink us)
+    public static dynamic? ToNodeLeg(object us)
     {
-        return us.AttValue["ToNodeLeg"] as ILeg;
+        return ((dynamic)us).AttValue["ToNodeLeg"];
     }
 
     /// <summary>
@@ -52,9 +52,9 @@ internal static class LinkExtensions
     /// </summary>
     /// <param name="us">The link to operate on.</param>
     /// <returns></returns>
-    public static ILink? GetReverseLink(this ILink us)
+    public static dynamic? GetReverseLink(object us)
     {
-        return us.AttValue["ReverseLink"] as ILink;
+        return ((dynamic)us).AttValue["ReverseLink"];
     }
 
     /// <summary>
@@ -62,9 +62,9 @@ internal static class LinkExtensions
     /// </summary>
     /// <param name="us">The link to operate on.</param>
     /// <returns></returns>
-    public static double GetLength(this ILink us)
+    public static double GetLength(object us)
     {
-        return (double)us.AttValue["Length"];
+        return (double)((dynamic)us).AttValue["Length"];
     }
 
 }

@@ -6,9 +6,9 @@ internal static class StandardTimeSeriesExtensions
     /// Get the weight of the time series item
     /// </summary>
     /// <param name="us">The item series item to read from.</param>
-    internal static double GetWeight(this ITimeSeriesItem us)
+    internal static double GetWeight(object us)
     {
-        return (double)us.AttValue["Weight"];
+        return (double)((dynamic)us).AttValue["Weight"];
     }
 
     /// <summary>
@@ -16,9 +16,9 @@ internal static class StandardTimeSeriesExtensions
     /// </summary>
     /// <param name="us">The item series item to set.</param>
     /// <param name="weight">The weight to assign to the time series item.</param>
-    internal static void SetWeight(this ITimeSeriesItem us, double weight)
+    internal static void SetWeight(object us, double weight)
     {
-        us.AttValue["Weight"] = weight;
+        ((dynamic)us).AttValue["Weight"] = weight;
     }
 
     /// <summary>
@@ -26,9 +26,9 @@ internal static class StandardTimeSeriesExtensions
     /// </summary>
     /// <param name="us">The time series to get the number for.</param>
     /// <returns>The number for the time series.</returns>
-    internal static int GetNumber(this ITimeSeries us)
+    internal static int GetNumber(object us)
     {
-        return (int)(double)us.AttValue["No"];
+        return (int)(double)((dynamic)us).AttValue["No"];
     }
 
     /// <summary>
@@ -36,9 +36,9 @@ internal static class StandardTimeSeriesExtensions
     /// </summary>
     /// <param name="us">The time series to get the number for.</param>
     /// <returns>The name of the time series.</returns>
-    internal static string GetName(this ITimeSeries us)
+    internal static string GetName(object us)
     {
-        return (string)us.AttValue["Name"];
+        return (string)((dynamic)us).AttValue["Name"];
     }
 
 }

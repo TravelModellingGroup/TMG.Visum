@@ -51,7 +51,7 @@ public abstract class TransitAlgorithmParameters
     /// Apply active line filter
     /// </summary>
     /// <param name="filter">The VISUM filter to setup.</param>
-    internal abstract void ApplyActiveLineFilter(ILineGroupFilter filter);
+    internal abstract void ApplyActiveLineFilter(object filter);
 
     /// <summary>
     /// Update the dwell times for this transit assignment.

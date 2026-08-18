@@ -13,6 +13,7 @@ public sealed class SaveVisumInstance : ISelfContainedModule
 
     public void Start()
     {
+        var loaded = Visum.Loaded;
         var instance = Visum.LoadInstance();
         try
         {
@@ -21,6 +22,13 @@ public sealed class SaveVisumInstance : ISelfContainedModule
         catch(Exception ex)
         {
             throw new XTMFRuntimeException(this, ex);
+        }
+        finally
+        {
+            if (!loaded)
+            {
+                Visum.UnloadData();
+            }
         }
     }
 

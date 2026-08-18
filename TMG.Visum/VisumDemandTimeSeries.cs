@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -9,10 +8,10 @@ namespace TMG.Visum;
 /// </summary>
 public sealed class VisumDemandTimeSeries : IDisposable
 {
-    private IDemandTimeSeries _timeSeries;
+    private dynamic _timeSeries;
     private VisumInstance _instance;
 
-    internal VisumDemandTimeSeries(IDemandTimeSeries timeSeries, VisumInstance instance)
+    internal VisumDemandTimeSeries(dynamic timeSeries, VisumInstance instance)
     {
         _timeSeries = timeSeries;
         _instance = instance;
@@ -62,7 +61,7 @@ public sealed class VisumDemandTimeSeries : IDisposable
         get
         {
             var number = StandardTimeSeriesNumber;
-            if (_instance.Visum is not IVisum instance)
+            if (_instance.Visum is null)
             {
                 ThrowVisumDisposed();
             }
@@ -82,7 +81,7 @@ public sealed class VisumDemandTimeSeries : IDisposable
     internal VisumStandardTimeSeries GetStandardTimeSeriesInternal()
     {
         var number = StandardTimeSeriesNumber;
-        if (_instance.Visum is not IVisum instance)
+        if (_instance.Visum is null)
         {
             ThrowVisumDisposed();
         }
@@ -106,11 +105,8 @@ public sealed class VisumDemandTimeSeries : IDisposable
     {
         if (!disposedValue)
         {
-            if (disposing)
-            {
-                COM.ReleaseCOMObject(ref _timeSeries!, false);
-                _instance = null!;
-            }
+            COM.ReleaseCOMObject(ref _timeSeries!, false);
+            _instance = null!;
             disposedValue = true;
         }
     }
@@ -125,7 +121,7 @@ public sealed class VisumDemandTimeSeries : IDisposable
     /// INTERNAL ONLY - Get the wrapped Demand Time Series.
     /// </summary>
     /// <returns>The wrapped DemandTimeSeries object.</returns>
-    internal IDemandTimeSeries GetInnerTimeSeries()
+    internal dynamic GetInnerTimeSeries()
     {
         return _timeSeries;
     }

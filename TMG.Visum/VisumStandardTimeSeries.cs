@@ -10,14 +10,14 @@ public class VisumStandardTimeSeries : IDisposable
     /// <summary>
     /// A reference to the underlying standard time series
     /// </summary>
-    private ITimeSeries _timeSeries;
+    private dynamic _timeSeries;
 
     /// <summary>
     /// The instance that the standard time series belongs to.
     /// </summary>
     private VisumInstance _instance;
 
-    internal VisumStandardTimeSeries(ITimeSeries timeSeries, VisumInstance instance)
+    internal VisumStandardTimeSeries(dynamic timeSeries, VisumInstance instance)
     {
         _timeSeries = timeSeries;
         _instance = instance;
@@ -63,7 +63,7 @@ public class VisumStandardTimeSeries : IDisposable
             int current = 0;
             // The key is a start time not the index in the series so we
             // can't just get it by key.
-            foreach (ITimeSeriesItem item in _timeSeries.TimeSeriesItems)
+            foreach (dynamic item in _timeSeries.TimeSeriesItems)
             {
                 if (current == index)
                 {
@@ -95,11 +95,8 @@ public class VisumStandardTimeSeries : IDisposable
     {
         if (!disposedValue)
         {
-            if (disposing)
-            {
-                COM.ReleaseCOMObject(ref _timeSeries!, false);
-                _instance = null!;
-            }
+            COM.ReleaseCOMObject(ref _timeSeries!, false);
+            _instance = null!;
             disposedValue = true;
         }
     }
@@ -114,7 +111,7 @@ public class VisumStandardTimeSeries : IDisposable
     /// INTERNAL ONLY - Gets the wrapped object.
     /// </summary>
     /// <returns>The underlying object this wrapper holds.</returns>
-    internal ITimeSeries GetWrappedObject()
+    internal dynamic GetWrappedObject()
     {
         return _timeSeries;
     }

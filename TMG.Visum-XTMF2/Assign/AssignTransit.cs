@@ -44,10 +44,11 @@ public sealed class AssignTransit : BaseAction<VisumInstance>
     public override void Invoke(VisumInstance instance)
     {
         List<VisumDemandSegment>? segments = null;
+        List<VisumMatrix>? demandMatrices = null;
         List<List<VisumMatrix>>? processedMatrices = null;
         try
         {
-            segments = GetDemandSegments(instance);
+            (segments, demandMatrices) = GetDemandSegments(instance);
             var matricesToGenerate = LoSToGenerate?.Select(matrix => matrix.Type.Invoke()).ToList() ?? new List<PutLoSTypes>();
             var transitParameters = AssignmentAlgorithm.Invoke().GetTransitParameters();
             var iterations = Iterations.Invoke();
@@ -60,12 +61,17 @@ public sealed class AssignTransit : BaseAction<VisumInstance>
         }
         finally
         {
-            // Release the variables.
+            if (demandMatrices is not null)
+            {
+                for (int i = 0; i < demandMatrices.Count; i++)
+                {
+                    demandMatrices[i]?.Dispose();
+                }
+            }
             if (segments is not null)
             {
                 for (int i = 0; i < segments.Count; i++)
                 {
-                    segments[i]?.DemandMatrix?.Dispose();
                     segments[i].Dispose();
                 }
             }
@@ -149,18 +155,20 @@ public sealed class AssignTransit : BaseAction<VisumInstance>
     /// </summary>
     /// <param name="instance">The VISUM instance to work for.</param>
     /// <returns>A list of VisumDemandSegments to use.</returns>
-    private List<VisumDemandSegment> GetDemandSegments(VisumInstance instance)
+    private (List<VisumDemandSegment> Segments, List<VisumMatrix> DemandMatrices) GetDemandSegments(VisumInstance instance)
     {
-        return DemandSegments
-            .Select(segmentFunc =>
-            {
-                var segment = segmentFunc.Invoke();
-                var s = instance.GetDemandSegment(segment.Code.Invoke());
-                var matrix = instance.GetMatrixByName(segment.DemandMatrix.Invoke());
-                matrix.SetAsDemandMatrix();
-                s.DemandMatrix = matrix;
-                return s;
-            })
-            .ToList();
+        var segments = new List<VisumDemandSegment>(DemandSegments.Length);
+        var matrices = new List<VisumMatrix>(DemandSegments.Length);
+        foreach (var segmentFunc in DemandSegments)
+        {
+            var segment = segmentFunc.Invoke();
+            var s = instance.GetDemandSegment(segment.Code.Invoke());
+            var matrix = instance.GetMatrixByName(segment.DemandMatrix.Invoke());
+            matrix.SetAsDemandMatrix();
+            s.DemandMatrix = matrix;
+            segments.Add(s);
+            matrices.Add(matrix);
+        }
+        return (segments, matrices);
     }
 }

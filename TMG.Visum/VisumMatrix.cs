@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.HighPerformance;
 using System.Diagnostics.CodeAnalysis;
-using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -12,7 +11,7 @@ public sealed class VisumMatrix : IDisposable
     /// <summary>
     /// Our local copy of the Visum matrix.
     /// </summary>
-    private IMatrix _matrix;
+    private dynamic _matrix;
 
     /// <summary>
     /// Store what type of data this matrix represents.
@@ -22,7 +21,7 @@ public sealed class VisumMatrix : IDisposable
     /// <summary>
     /// The instance of visum that this matrix belongs to.
     /// </summary>
-    private readonly IVisum _instance;
+    private readonly dynamic _instance;
 
     /// <summary>
     /// Provides a wrapper around the matrix that
@@ -31,7 +30,7 @@ public sealed class VisumMatrix : IDisposable
     /// <param name="matrix">The matrix to wrap.</param>
     /// <param name="basedOn">The type of attribute that the matrix was based on.</param>
     /// <param name="visum">The visum instance to work with.</param>
-    internal VisumMatrix(IMatrix matrix, ObjectTypeRefT basedOn, IVisum visum)
+    internal VisumMatrix(dynamic matrix, ObjectTypeRefT basedOn, dynamic visum)
     {
         _matrix = matrix;
         _basedOn = basedOn;
@@ -41,7 +40,7 @@ public sealed class VisumMatrix : IDisposable
     /// <summary>
     /// Internal only, get access to the underlying matrix.
     /// </summary>
-    internal IMatrix Matrix => _matrix;
+    internal dynamic Matrix => _matrix;
 
     /// <summary>
     /// Get the dimensions of from the given reference type.
@@ -50,13 +49,14 @@ public sealed class VisumMatrix : IDisposable
     /// <param name="visum">Our visum instance needed to get the sizes from.</param>
     /// <returns>The number of rows and columns for the matrix.</returns>
     /// <exception cref="InvalidOperationException">If an unknown type of matrix is requested.</exception>
-    private static (int rows, int columns) GetDimensions(ObjectTypeRefT basedOn, IVisum visum)
+    private static (int rows, int columns) GetDimensions(ObjectTypeRefT basedOn, object visum)
     {
+        dynamic instance = visum;
         int count = basedOn switch
         {
-            ObjectTypeRefT.OBJECTTYPEREF_ZONE => visum.Net.Zones.Count,
-            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => visum.Net.MainZones.Count,
-            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => visum.Net.StopAreas.Count,
+            ObjectTypeRefT.OBJECTTYPEREF_ZONE => instance.Net.Zones.Count,
+            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => instance.Net.MainZones.Count,
+            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => instance.Net.StopAreas.Count,
             _ => ThrowInvalidType<int>(basedOn)
         };
         return (count, count);
@@ -67,18 +67,29 @@ public sealed class VisumMatrix : IDisposable
     /// </summary>
     public void SetAsDemandMatrix()
     {
-        _matrix.SetMatrixType(MatrixType.MATRIXTYPE_DEMAND);
+        MatrixExtensions.SetMatrixType(((object)_matrix), MatrixType.MATRIXTYPE_DEMAND);
     }
 
     public int[] GetSparseIndexes()
     {
         return _basedOn switch
         {
-            ObjectTypeRefT.OBJECTTYPEREF_ZONE => _instance.Net.Zones.GetZoneNumbers(),
-            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => _instance.Net.MainZones.GetZoneNumbers(),
-            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => _instance.Net.StopAreas.GetStopAreaNumbers(),
+            ObjectTypeRefT.OBJECTTYPEREF_ZONE => GetNumbers(_instance.Net.Zones),
+            ObjectTypeRefT.OBJECTTYPEREF_MAINZONE => GetNumbers(_instance.Net.MainZones),
+            ObjectTypeRefT.OBJECTTYPEREF_STOPAREA => GetNumbers(_instance.Net.StopAreas),
             _ => ThrowInvalidType<int[]>(_basedOn)
         };
+    }
+
+    private static int[] GetNumbers(dynamic container)
+    {
+        int[] ret = new int[(int)container.Count];
+        int pos = 0;
+        foreach (dynamic item in container)
+        {
+            ret[pos++] = (int)(double)item.AttValue["No"];
+        }
+        return ret;
     }
 
     [DoesNotReturn]
@@ -92,8 +103,8 @@ public sealed class VisumMatrix : IDisposable
     /// </summary>
     public string Name
     {
-        get => _matrix.GetName();
-        set => _matrix.SetName(value);
+        get => (string)_matrix.AttValue["Name"];
+        set => _matrix.AttValue["Name"] = value;
     }
 
     /// <summary>
@@ -101,24 +112,24 @@ public sealed class VisumMatrix : IDisposable
     /// </summary>
     public string Code
     {
-        get => _matrix.GetCode();
-        set => _matrix.SetCode(value);
+        get => (string)_matrix.AttValue["Code"];
+        set => _matrix.AttValue["Code"] = value;
     }
 
     /// <summary>
     /// The number of rows in the matrix
     /// </summary>
-    public int Rows => GetDimensions(_basedOn, _instance).rows;
+    public int Rows => GetDimensions(_basedOn, (object)_instance).rows;
 
     /// <summary>
     /// The number of columns in the matrix
     /// </summary>
-    public int Columns => GetDimensions(_basedOn, _instance).columns;
+    public int Columns => GetDimensions(_basedOn, (object)_instance).columns;
 
     /// <summary>
     /// Get the matrix's unique number
     /// </summary>
-    public int Number => _matrix.GetNumber();
+    public int Number => (int)(double)_matrix.AttValue["No"];
 
     /// <summary>
     /// Gets the total sum of the matrix
@@ -286,10 +297,7 @@ public sealed class VisumMatrix : IDisposable
     {
         if (!disposedValue)
         {
-            if (disposing)
-            {
-                COM.ReleaseCOMObject(ref _matrix!, false);
-            }
+            COM.ReleaseCOMObject(ref _matrix!, false);
             disposedValue = true;
         }
     }

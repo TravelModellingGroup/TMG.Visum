@@ -1,6 +1,7 @@
 ﻿// Ignore Spelling: Visum
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using TMG.Visum.TransitAssignment;
 
 namespace TMG.Visum;
@@ -20,10 +21,10 @@ public partial class VisumInstance
     /// <param name="stsuParmaters">Parameters for Surface Transit Speed Updating.</param>
     /// <returns>A list of matrices for the demand segment for each LoS to Generate.</returns>
     /// <exception cref="VisumException"></exception>
-    public List<VisumMatrix> ExecuteTransitAssignment(VisumDemandSegment segment, IList<PutLoSTypes> loSToGenerate,
+    public List<List<VisumMatrix>> ExecuteTransitAssignment(VisumDemandSegment segment, IList<PutLoSTypes> loSToGenerate,
         TransitAlgorithmParameters algorithm, int iterations = 1)
     {
-        return ExecuteTransitAssignment([segment], loSToGenerate, algorithm)[0];
+        return ExecuteTransitAssignment([segment], loSToGenerate, algorithm);
     }
 
     /// <summary>
@@ -42,11 +43,12 @@ public partial class VisumInstance
         TransitAlgorithmParameters algorithm, int iterations = 1)
     {
         CheckTransitAssignmentParameters(segments);
+        VisumStandardTimeSeries? tempTimeSeries = null;
 
         _lock.EnterWriteLock();
         try
         {
-            VisumStandardTimeSeries? tempTimeSeries = SetupTempTimeSeries(segments, algorithm);
+            tempTimeSeries = SetupTempTimeSeries(segments, algorithm);
             algorithm.Setup(this);
             UpdateSTSUSegmentSpeeds(algorithm);
             List<List<VisumMatrix>>? matrices = null;
@@ -63,6 +65,10 @@ public partial class VisumInstance
                 }
             }
             algorithm.CleanUp(this);
+            return matrices!;
+        }
+        finally
+        {
             // clean-up the temporary time series
             if (tempTimeSeries is not null)
             {
@@ -70,10 +76,6 @@ public partial class VisumInstance
                 tempTimeSeries.Dispose();
                 RemoveStandardTimeSeriesInternal(number);
             }
-            return matrices!;
-        }
-        finally
-        {
             _lock.ExitWriteLock();
         }
     }
@@ -93,7 +95,8 @@ public partial class VisumInstance
             .GetWrappedObject()
             .AddTimeSeriesItem(GetTime(parameters.AssignmentStartDayIndex, parameters.AssignmentStartTime),
                                GetTime(parameters.AssignmentEndDayIndex, parameters.AssignmentEndTime));
-        item.SetWeight(100.0);
+        StandardTimeSeriesExtensions.SetWeight(item, 100.0);
+        Marshal.ReleaseComObject(item);
         // Point all of the segments to the time series
         foreach (var segment in segments)
         {
@@ -119,17 +122,18 @@ public partial class VisumInstance
 
     private void FilterOnlyActiveLines(TransitAlgorithmParameters algorithm)
     {
-        var filter = _visum!.Filters.LineGroupFilter();
+        var dynamicFilter = _visum!.Filters.LineGroupFilter();
         // Clear the rest of the filters
         SetLineGroupFilterInternal(true);
-        filter.LineFilter().UseFilter = false;
-        filter.LineRouteFilter().UseFilter = false;
-        filter.TimeProfileItemFilter().UseFilter = false;
-        filter.LineRouteItemFilter().UseFilter = false;
-        filter.VehJourneyFilter().UseFilter = false;
-        filter.VehJourneyItemFilter().UseFilter = false;
-        filter.TimeProfileFilter().UseFilter = false;
-        algorithm.ApplyActiveLineFilter(filter);
+        dynamicFilter.LineFilter().UseFilter = false;
+        dynamicFilter.LineRouteFilter().UseFilter = false;
+        dynamicFilter.TimeProfileItemFilter().UseFilter = false;
+        dynamicFilter.LineRouteItemFilter().UseFilter = false;
+        dynamicFilter.VehJourneyFilter().UseFilter = false;
+        dynamicFilter.VehJourneyItemFilter().UseFilter = false;
+        dynamicFilter.TimeProfileFilter().UseFilter = false;
+        algorithm.ApplyActiveLineFilter(dynamicFilter);
+        COM.ReleaseCOMObject(ref dynamicFilter);
     }
 
     /// <summary>
@@ -148,6 +152,7 @@ public partial class VisumInstance
         filter.UseFilterForVehJourneyItems = enable;
         filter.UseFilterForVehJourneys = enable;
         filter.UseFilterForVehJourneySections = enable;
+        COM.ReleaseCOMObject(ref filter);
     }
 
     private void UpdateDwellTimes(TransitAlgorithmParameters algorithm)
@@ -189,10 +194,10 @@ public partial class VisumInstance
             // Wipe out the previous procedures and run this.
             RunProceduresFromFileInternal(tempFileName);
             // Get the matrices that were returned
-            var ret = new List<List<VisumMatrix>>();
+            var ret = new List<List<VisumMatrix>>(segments.Count);
             foreach (var demandSegment in segments)
             {
-                var segmentMatrices = new List<VisumMatrix>();
+                var segmentMatrices = new List<VisumMatrix>(loSToGenerate.Count);
                 foreach (var loSType in loSToGenerate)
                 {
                     var matrixName = loSType.GetMatrixName(demandSegment);
@@ -223,14 +228,20 @@ public partial class VisumInstance
     {
         foreach (var demandSegment in segments)
         {
-            var segmentMatrices = new List<VisumMatrix>();
             foreach (var loSType in loSToGenerate)
             {
                 var matrixName = loSType.GetMatrixName(demandSegment);
                 if (TryGetMatrixInner(matrixName, out var matrix))
                 {
-                    int number = matrix.GetNumber();
-                    DeleteMatrixInner(number);
+                    try
+                    {
+                        int number = MatrixExtensions.GetNumber(matrix);
+                        DeleteMatrixInner(number);
+                    }
+                    finally
+                    {
+                        COM.ReleaseCOMObject(ref matrix, false);
+                    }
                 }
             }
         }
@@ -262,7 +273,6 @@ public partial class VisumInstance
     public bool TestSTSU(float autoCorrelation, float defaultSpeed,
         float defaultStopDuration, string autoNetwork, [NotNullWhen(false)] ref string? error)
     {
-
         /*
          * We can test if STSU is working by finding all of the links that each transit itinerary takes
          * and then sum up the travel time across the links.  We then need to sum the number of stops.
@@ -271,66 +281,115 @@ public partial class VisumInstance
         var autoTimeAttriubte = $"TCUR_PRTSYS({autoNetwork})";
         const double maxLinkTime = 9999.0;
         const double maxDifference = 1.0 / 60.0;
-        var timeProfiles = (object[])_visum.Net.TimeProfiles.GetAll;
-        var links = _visum.Net.Links;
-        HashSet<ILink> usedLinks = new();
+        var timeProfiles = (object[])_visum!.Net.TimeProfiles.GetAll;
+        var usedLinkNumbers = new HashSet<int>();
         var any = false;
-        foreach (ITimeProfile timeProfile in timeProfiles)
+
+        foreach (dynamic timeProfile in timeProfiles)
         {
-            // Gather all of the links used
-            var items = (object[])timeProfile.TimeProfileItems.GetAll;
-            double totalLinkTime = 0.0;
-            usedLinks.Clear();
-            if(items.Length <= 0)
+            object[] items = [];
+            dynamic? lineRoute = null;
+            dynamic? lineRouteItems = null;
+
+            try
             {
-                continue;
-            }
-            var lineRoute = ((ITimeProfileItem)items[0]).LineRouteItem.LineRoute;
-            var lineRouteItems = lineRoute.LineRouteItems;
-            var stsuDistance = 0.0;
-            foreach (ILineRouteItem item in lineRouteItems)
-            {
-                var outLink = item.GetOutLink(_visum);
-                if (outLink is not null
-                    && !usedLinks.Contains(outLink))
+                // Gather all of the links used
+                items = (object[])timeProfile.TimeProfileItems.GetAll;
+                double totalLinkTime = 0.0;
+                usedLinkNumbers.Clear();
+                if (items.Length <= 0)
                 {
-                    usedLinks.Add(outLink);
-                    stsuDistance += outLink.GetLength();
+                    continue;
+                }
+
+                lineRoute = ((dynamic)items[0]).LineRouteItem.LineRoute;
+                lineRouteItems = lineRoute.LineRouteItems;
+                var stsuDistance = 0.0;
+                foreach (object item in lineRouteItems)
+                {
+                    dynamic? outLink = null;
                     try
                     {
-                        var autoTime = (double)outLink.AttValue[autoTimeAttriubte];
-                        // Check to see if the links is not traversal by auto
-                        if (autoTime > maxLinkTime)
+                        outLink = LineRouteItemExtensions.GetOutLink(item, (object)_visum!);
+                        if (outLink is null)
                         {
-                            var length = outLink.GetLength();
-                            autoTime = defaultSpeed * length;
+                            continue;
                         }
-                        totalLinkTime += Math.Floor(autoCorrelation * autoTime);
-                        any = true;
+
+                        var linkNumber = (int)(double)outLink.AttValue["No"];
+                        if (!usedLinkNumbers.Add(linkNumber))
+                        {
+                            continue;
+                        }
+
+                        stsuDistance += LinkExtensions.GetLength((object)outLink);
+                        try
+                        {
+                            var autoTime = (double)outLink.AttValue[autoTimeAttriubte];
+                            // Check to see if the links is not traversal by auto
+                            if (autoTime > maxLinkTime)
+                            {
+                                var length = LinkExtensions.GetLength((object)outLink);
+                                autoTime = defaultSpeed * length;
+                            }
+                            totalLinkTime += Math.Floor(autoCorrelation * autoTime);
+                            any = true;
+                        }
+                        catch
+                        { }
                     }
-                    catch
-                    { }
+                    finally
+                    {
+                        if (outLink is not null)
+                        {
+                            COM.ReleaseCOMObject(ref outLink, false);
+                        }
+                    }
+                }
+
+                var stsuRunTime = totalLinkTime + defaultStopDuration * (items.Length - 2);
+                var expectedRunTime = TimeProfileItemExtensions.GetAccumulatedRunTime((object)items[^1]);
+                var expectedDistance = TimeProfileItemExtensions.GetAccumulatedRunDistance((object)items[^1]);
+                if (Math.Abs(stsuDistance - expectedDistance) > maxDifference)
+                {
+                    error = "Out of distance bounds!";
+                    return false;
+                }
+                if (Math.Abs(stsuRunTime - expectedRunTime) > maxDifference)
+                {
+                    error = "Out of time bounds!";
+                    return false;
                 }
             }
-            var stsuRunTime = totalLinkTime + defaultStopDuration * (items.Length - 2);
-            var expectedRunTime = ((ITimeProfileItem)items[^1]).GetAccumulatedRunTime();
-            var expectedDistance = ((ITimeProfileItem)items[^1]).GetAccumulatedRunDistance();
-            if (Math.Abs(stsuDistance - expectedDistance) > maxDifference)
+            finally
             {
-                error = "Out of distance bounds!";
-                return false;
-            }
-            if (Math.Abs(stsuRunTime - expectedRunTime) > maxDifference)
-            {
-                error = "Out of time bounds!";
-                return false;
+                if (lineRouteItems is not null)
+                {
+                    COM.ReleaseCOMObject(ref lineRouteItems, false);
+                }
+                if (lineRoute is not null)
+                {
+                    COM.ReleaseCOMObject(ref lineRoute, false);
+                }
+                for (int i = 0; i < items.Length; i++)
+                {
+                    dynamic? item = items[i];
+                    if (item is not null)
+                    {
+                        COM.ReleaseCOMObject(ref item, false);
+                    }
+                }
+                dynamic? currentTimeProfile = timeProfile;
+                COM.ReleaseCOMObject(ref currentTimeProfile, false);
             }
         }
-        if(!any)
+
+        if (!any)
         {
             error = "Not Any!";
             return false;
         }
+
         error = null;
         return true;
     }

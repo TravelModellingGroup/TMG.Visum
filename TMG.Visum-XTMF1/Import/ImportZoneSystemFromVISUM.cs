@@ -200,28 +200,58 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     // Loads distances from VISUM using the provided auto segment
     private SparseTwinIndex<float> LoadDistancesFromVisum()
     {
-        //Get data from VISUM road LOS
+        var loaded = VisumInstance.Loaded;
+        if (!loaded)
+        {
+            VisumInstance.LoadData();
+        }
+
         var visum = VisumInstance.GiveData();
+        VisumDemandSegment? segment = null;
+        List<VisumMatrix>? mats = null;
+        try
+        {
+            //get the auto segment
+            segment = visum!.GetDemandSegment(VisumAutoSegment!.Code);
 
-        //get the auto segment
-        var segment = visum!.GetDemandSegment(VisumAutoSegment!.Code);
+            //calculate road distances with free-flow traffic
+            mats = visum.CalculateRoadLoS(segment, [RoadAssignment.PrTLosTypes.TripDistance], PrTLoSSearchCriterion.t0);
+            var omat = mats[0].GetValuesAsFloatMatrix();
 
-        //calculate road distances with free-flow traffic
-        var mats = visum!.CalculateRoadLoS(segment, [RoadAssignment.PrTLosTypes.TripDistance], PrTLoSSearchCriterion.t0);
-        var omat = mats[0].GetValuesAsFloatMatrix();
+            //get indexed format
+            var distances = _zones!.CreateSquareTwinArray<float>();
+            var dmat = distances.GetFlatData();
 
-        //get indexed format
-        var distances = _zones!.CreateSquareTwinArray<float>();
-        var dmat = distances.GetFlatData();
+            //copy to index format, converting from km to m
+            if (ConvertToM)
+            {
+                for (int i = 0; i < dmat.Length; i++)
+                {
+                    VectorHelper.Multiply(dmat[i], 0, omat[i], 0, 1000.0f, dmat[i].Length);
+                }
+            }
+            else
+            {
+                omat.CopyTo(dmat, 0);
+            }
 
-        //copy to index format, converting from km to m
-        if (ConvertToM)
-            for (int i = 0; i < dmat.Length; i++)
-                VectorHelper.Multiply(dmat[i], 0, omat[i], 0, 1000.0f, dmat[i].Length);
-        else
-            omat.CopyTo(dmat, 0);
-
-        return distances;
+            return distances;
+        }
+        finally
+        {
+            if (mats is not null)
+            {
+                foreach (var matrix in mats)
+                {
+                    matrix.Dispose();
+                }
+            }
+            segment?.Dispose();
+            if (!loaded)
+            {
+                VisumInstance.UnloadData();
+            }
+        }
     }
 
 
@@ -264,12 +294,23 @@ public sealed class ImportZoneSystemFromVISUM : IZoneSystem
     /// <returns></returns>
     private (int[] zoneNumber, float[] x, float[] y) GetZoneInformation()
     {
-        if (!VisumInstance.Loaded)
+        var loaded = VisumInstance.Loaded;
+        if (!loaded)
         {
             VisumInstance.LoadData();
         }
-        var visum = VisumInstance.GiveData();
-        return visum!.GetZoneInformation();
+        try
+        {
+            var visum = VisumInstance.GiveData();
+            return visum!.GetZoneInformation();
+        }
+        finally
+        {
+            if (!loaded)
+            {
+                VisumInstance.UnloadData();
+            }
+        }
     }
 
     [RunParameter("Keep Loaded", true, "Don't unload the zone system.")]

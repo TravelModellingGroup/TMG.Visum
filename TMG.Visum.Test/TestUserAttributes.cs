@@ -7,8 +7,15 @@ public class TestUserAttributes
     [TestMethod]
     public void TestCreateUserAttribute()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        Assert.IsTrue(instance.CheckAttributeExists("USERNODEATTRIBUTE", NetworkObjectType.Node));
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            Assert.IsTrue(instance.CheckAttributeExists("USERNODEATTRIBUTE", NetworkObjectType.Node));
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
 }

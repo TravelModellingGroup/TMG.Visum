@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Runtime.InteropServices;
+using System.Xml;
 
 namespace TMG.Visum;
 
@@ -11,7 +12,7 @@ public sealed partial class VisumInstance : IDisposable
     /// Our link to VISUM, initialized
     /// at the start and set to null when disposed.
     /// </summary>
-    private IVisum? _visum;
+    private dynamic? _visum;
 
     /// <summary>
     /// This lock is used to make sure that we don't
@@ -20,21 +21,22 @@ public sealed partial class VisumInstance : IDisposable
     private readonly ReaderWriterLockSlim _lock = new();
 
     /// <summary>
-    /// The version of VISUM to use.
-    /// TODO: Make this change depending on the version of VISUM that is actually loaded.
+    /// The procedure file version VISUM expects.
     /// </summary>
     private const string VersionString = "2401";
 
+    private const VisumVersion DefaultVisumVersion = VisumVersion.Visum2024;
+
     /// <summary>
-    /// Initializes a new instead of VISUM.
+    /// Initializes a new instance of VISUM.
     /// </summary>
-    /// <param name="caller">The module that wants to create this new instance.</param>
+    /// <param name="visumVersion">The VISUM major version to activate.</param>
     /// <exception cref="VisumException">Thrown if there is an error when creating the new VISUM instance.</exception>
-    public VisumInstance()
+    public VisumInstance(VisumVersion visumVersion = VisumVersion.Visum2024)
     {
         try
         {
-            _visum = new VISUMLIB.Visum();
+            _visum = CreateVisumInstance(visumVersion);
             VersionFile = string.Empty;
             // We need to make sure to clear out the network in case it has been altered if a future load happens.
             _previouslyLoaded = true;
@@ -48,22 +50,58 @@ public sealed partial class VisumInstance : IDisposable
     /// <summary>
     /// Internal only, get the real VISUM instance.
     /// </summary>
-    internal IVisum? Visum => _visum;
+    internal dynamic? Visum => _visum;
 
     /// <summary>
-    /// Initializes a new instead of VISUM and immediately loads the given version file.
+    /// Initializes a new instance of VISUM and immediately loads the given version file.
     /// </summary>
-    /// <param name="caller">The module that wants to create this new instance.</param>
     /// <param name="versionFile">The version file to load.</param>
+    /// <param name="visumVersion">The VISUM major version to activate.</param>
     /// <exception cref="VisumException">
-    ///     Thrown if there is an error when 
+    ///     Thrown if there is an error when
     ///     creating the new VISUM instance or if there is an issue loading the version file.
     /// </exception>
-    public VisumInstance(string versionFile)
+    public VisumInstance(string versionFile, VisumVersion visumVersion = DefaultVisumVersion)
     {
         VersionFile = Path.GetFullPath(versionFile);
-        _visum = new VISUMLIB.Visum();
+        _visum = CreateVisumInstance(visumVersion);
         LoadVersionFile(versionFile);
+    }
+
+    private static dynamic CreateVisumInstance(VisumVersion visumVersion)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new VisumException("VISUM is only supported on Windows.");
+        }
+
+        var progId = visumVersion switch
+        {
+            VisumVersion.Visum2024 => "Visum.Visum.240",
+            VisumVersion.Visum2025 => "Visum.Visum.250",
+            VisumVersion.Visum2026 => "Visum.Visum.260",
+            _ => throw new VisumException($"Unsupported VISUM version '{visumVersion}'. Supported versions are 2024, 2025, and 2026."),
+        };
+
+        var visumType = Type.GetTypeFromProgID(progId)
+            ?? throw new VisumException($"VISUM COM ProgID '{progId}' is not registered on this machine.");
+
+        const int maxAttempts = 3;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                return Activator.CreateInstance(visumType)
+                    ?? throw new VisumException($"Unable to create VISUM COM instance for ProgID '{progId}'.");
+            }
+            catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80080005 && attempt < maxAttempts)
+            {
+                Thread.Sleep(1000 * attempt);
+            }
+        }
+
+        return Activator.CreateInstance(visumType)
+            ?? throw new VisumException($"Unable to create VISUM COM instance for ProgID '{progId}'.");
     }
 
     /// <summary>
@@ -175,8 +213,16 @@ public sealed partial class VisumInstance : IDisposable
     internal void RunProceduresFromFileInternal(string fileName)
     {
         ObjectDisposedException.ThrowIf(_visum is null, this);
-        _visum.Procedures.OpenXmlWithOptions(fileName, ReadFunctions: false, ResetFunctionsBeforeReading: false);
-        _visum.Procedures.Execute();
+        var procedures = _visum.Procedures;
+        try
+        {
+            procedures.OpenXmlWithOptions(fileName, ReadFunctions: false, ResetFunctionsBeforeReading: false);
+            procedures.Execute();
+        }
+        finally
+        {
+            COM.ReleaseCOMObject(ref procedures, false);
+        }
     }
 
 
@@ -188,7 +234,15 @@ public sealed partial class VisumInstance : IDisposable
     internal void OpenFilterInner(string filterFileName)
     {
         ObjectDisposedException.ThrowIf(_visum is null, this);
-        _visum.Filters.Open(filterFileName);
+        var filters = _visum.Filters;
+        try
+        {
+            filters.Open(filterFileName);
+        }
+        finally
+        {
+            COM.ReleaseCOMObject(ref filters, false);
+        }
     }
 
     /// <summary>
@@ -198,18 +252,32 @@ public sealed partial class VisumInstance : IDisposable
     internal void ResetAllFilters()
     {
         var filters = _visum!.Filters;
-        filters.NodeFilter().UseFilter = false;
-        filters.MainNodeFilter().UseFilter = false;
-        filters.LinkFilter().UseFilter = false;
-        filters.TurnFilter().UseFilter = false;
-        var lineGroupFilter = filters.LineGroupFilter();
-        lineGroupFilter.UseFilterForLineRouteItems = false;
-        lineGroupFilter.UseFilterForLineRoutes = false;
-        lineGroupFilter.UseFilterForLines = false;
-        lineGroupFilter.UseFilterForVehJourneys = false;
-        lineGroupFilter.UseFilterForVehJourneySections = false;
-        lineGroupFilter.UseFilterForTimeProfiles = false;
-        lineGroupFilter.UseFilterForTimeProfileItems = false;
+        try
+        {
+            filters.NodeFilter().UseFilter = false;
+            filters.MainNodeFilter().UseFilter = false;
+            filters.LinkFilter().UseFilter = false;
+            filters.TurnFilter().UseFilter = false;
+            var lineGroupFilter = filters.LineGroupFilter();
+            try
+            {
+                lineGroupFilter.UseFilterForLineRouteItems = false;
+                lineGroupFilter.UseFilterForLineRoutes = false;
+                lineGroupFilter.UseFilterForLines = false;
+                lineGroupFilter.UseFilterForVehJourneys = false;
+                lineGroupFilter.UseFilterForVehJourneySections = false;
+                lineGroupFilter.UseFilterForTimeProfiles = false;
+                lineGroupFilter.UseFilterForTimeProfileItems = false;
+            }
+            finally
+            {
+                COM.ReleaseCOMObject(ref lineGroupFilter, false);
+            }
+        }
+        finally
+        {
+            COM.ReleaseCOMObject(ref filters, false);
+        }
     }
 
     #region IDispose

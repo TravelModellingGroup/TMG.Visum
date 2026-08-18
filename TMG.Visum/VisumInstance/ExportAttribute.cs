@@ -84,7 +84,7 @@ public partial class VisumInstance
                             var activeLinks = (object[])_visum.Net.Links.GetAllActive;
                             foreach (var l in activeLinks)
                             {
-                                var link = (ILink)l;
+                                dynamic link = l;
                                 var condition = link.AttValue[conditionCode];
                                 writer.Write(condition);
                                 foreach (var name in exportCodes)

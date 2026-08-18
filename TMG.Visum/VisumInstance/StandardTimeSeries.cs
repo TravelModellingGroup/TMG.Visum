@@ -39,7 +39,7 @@ public partial class VisumInstance
     {
         ObjectDisposedException.ThrowIf(_visum is null, this);
         int maxNumber = 1;
-        foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
+        foreach (dynamic series in _visum.Net.TimeSeriesCont)
         {
             maxNumber = Math.Max(maxNumber, (int)(double)series.AttValue["no"]);
         }
@@ -103,20 +103,20 @@ public partial class VisumInstance
 
         // Before we do this we need to remove references to it
         // from DemandTimeSeries otherwise it will cascade delete them
-        foreach(IDemandTimeSeries series in _visum.Net.DemandTimeSeriesCont)
+        foreach (object series in _visum.Net.DemandTimeSeriesCont)
         {
-            if(series.GetStandardTimeSeriesNo() == number)
+            if (DemandTimeSeriesExtensions.GetStandardTimeSeriesNo(series) == number)
             {
                 // TODO: Double check that the assumption for 1 is valid
-                series.SetStandardTimeSeriesNo(1);
+                DemandTimeSeriesExtensions.SetStandardTimeSeriesNo(series, 1);
             }
         }
 
         // Now that we don't have a demand time series referencing this we
         // can now remove the time series
-        foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
+        foreach (dynamic series in _visum.Net.TimeSeriesCont)
         {
-            if (number == series.GetNumber())
+            if (number == (int)(double)series.AttValue["No"])
             {
                 _visum.Net.RemoveTimeSeries(series);
                 return true;
@@ -137,9 +137,9 @@ public partial class VisumInstance
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
 
-            foreach (ITimeSeries series in _visum.Net.TimeSeriesCont)
+            foreach (dynamic series in _visum.Net.TimeSeriesCont)
             {
-                if (name.Equals(series.GetName()))
+                if (name.Equals((string)series.AttValue["Name"]))
                 {
                     _visum.Net.RemoveTimeSeries(series);
                     return true;
@@ -212,7 +212,7 @@ public partial class VisumInstance
     internal bool TryGetStandardTimeSeriesInternal(int timeSeriesNumber, [NotNullWhen(true)] out VisumStandardTimeSeries? series)
     {
         ObjectDisposedException.ThrowIf(_visum is null, this);
-        ITimeSeries? ret = _visum.Net.TimeSeriesCont.ItemByKey[timeSeriesNumber];
+        dynamic ret = _visum.Net.TimeSeriesCont.ItemByKey[timeSeriesNumber];
         if (ret is not null)
         {
             series = new VisumStandardTimeSeries(ret, this);
@@ -249,9 +249,9 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            foreach (ITimeSeries s in _visum.Net.TimeSeriesCont)
+            foreach (dynamic s in _visum.Net.TimeSeriesCont)
             {
-                if (name.Equals(s.GetName()))
+                if (name.Equals((string)s.AttValue["Name"]))
                 {
                     series = new VisumStandardTimeSeries(s, this);
                     return true;

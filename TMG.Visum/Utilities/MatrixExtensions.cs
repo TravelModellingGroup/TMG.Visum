@@ -8,9 +8,9 @@ public static class MatrixExtensions
     /// <param name="matrix"></param>
     /// <returns>The name of the matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string GetName(this IMatrix matrix)
+    public static string GetName(object matrix)
     {
-        var name = matrix.AttValue["Name"] as string;
+        var name = ((dynamic)matrix).AttValue["Name"] as string;
         return name!;
     }
 
@@ -20,9 +20,9 @@ public static class MatrixExtensions
     /// <param name="matrix"></param>
     /// <returns>The code of the matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string GetCode(this IMatrix matrix)
+    public static string GetCode(object matrix)
     {
-        var name = matrix.AttValue["Code"] as string;
+        var name = ((dynamic)matrix).AttValue["Code"] as string;
         return name!;
     }
 
@@ -32,9 +32,9 @@ public static class MatrixExtensions
     /// <param name="matrix"></param>
     /// <param name="name">The name to set it to.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetName(this IMatrix matrix, string name)
+    public static void SetName(object matrix, string name)
     {
-        matrix.AttValue["Name"] = name;
+        ((dynamic)matrix).AttValue["Name"] = name;
     }
 
     /// <summary>
@@ -43,9 +43,9 @@ public static class MatrixExtensions
     /// <param name="matrix"></param>
     /// <param name="code">The code to set it to.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetCode(this IMatrix matrix, string code)
+    public static void SetCode(object matrix, string code)
     {
-        matrix.AttValue["Code"] = code;
+        ((dynamic)matrix).AttValue["Code"] = code;
     }
 
     /// <summary>
@@ -54,12 +54,12 @@ public static class MatrixExtensions
     /// <param name="matrix"></param>
     /// <returns>The matrix number to look at.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetNumber(this IMatrix matrix)
+    public static int GetNumber(object matrix)
     {
         // The attribute is stored as a double
         // However Visum uses it as an int, so we need to
         // cast twice.
-        return (int)((double)matrix.AttValue["No"]);
+        return (int)((double)((dynamic)matrix).AttValue["No"]);
     }
 
     /// <summary>
@@ -68,10 +68,10 @@ public static class MatrixExtensions
     /// <param name="matrix">The matrix to lookup.</param>
     /// <returns>The 0-indexed lookup in the matrix list for this matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetIndex(this IMatrix matrix)
+    public static int GetIndex(object matrix)
     {
         // Yes the attribute is called number, not Index
-        return (int)matrix.AttValue["Number"] - 1;
+        return (int)((dynamic)matrix).AttValue["Number"] - 1;
     }
 
     /// <summary>
@@ -80,9 +80,9 @@ public static class MatrixExtensions
     /// <param name="matrix">The matrix to get the data source type from.</param>
     /// <returns>The data source type for the matrix, defaults to data if no type was set.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DataSourceType GetDataSourceType(this IMatrix matrix)
+    public static DataSourceType GetDataSourceType(object matrix)
     {
-        var o = matrix.AttValue["DataSourceType"];
+        var o = ((dynamic)matrix).AttValue["DataSourceType"];
         return o is not null ? (DataSourceType)o : DataSourceType.DataSourceTypeData;
     }
 
@@ -92,9 +92,9 @@ public static class MatrixExtensions
     /// <param name="matrix">The matrix to set the type for.</param>
     /// <param name="type">The type to assign to it.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetDataSourceType(this IMatrix matrix, DataSourceType type)
+    public static void SetDataSourceType(object matrix, DataSourceType type)
     {
-        matrix.AttValue["DataSourceType"] = type;
+        ((dynamic)matrix).AttValue["DataSourceType"] = type;
     }
 
     /// <summary>
@@ -103,9 +103,9 @@ public static class MatrixExtensions
     /// <param name="matrix">The matrix to get the type from.</param>
     /// <returns>The matrix type, defaults to external.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MatrixType GetMatrixType(this IMatrix matrix)
+    public static MatrixType GetMatrixType(object matrix)
     {
-        var o = matrix.AttValue["MatrixType"];
+        var o = ((dynamic)matrix).AttValue["MatrixType"];
         return o is not null ? (MatrixType)o : MatrixType.MATRIXTYPE_EXTERNAL;
     }
 
@@ -115,9 +115,9 @@ public static class MatrixExtensions
     /// <param name="matrix">The matrix to assign to.</param>
     /// <param name="type">The type to assign to the matrix.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetMatrixType(this IMatrix matrix, MatrixType type)
+    public static void SetMatrixType(object matrix, MatrixType type)
     {
-        matrix.AttValue["MatrixType"] = type;
+        ((dynamic)matrix).AttValue["MatrixType"] = type;
     }
 
 }

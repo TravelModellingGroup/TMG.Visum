@@ -1,6 +1,4 @@
-﻿using VISUMLIB;
-
-namespace TMG.Visum;
+﻿namespace TMG.Visum;
 
 /// <summary>
 /// Represents an instance within a Time Series.
@@ -11,14 +9,14 @@ public class VisumTimeSeriesItem : IDisposable
     /// <summary>
     /// A reference to the underlying standard time series item
     /// </summary>
-    private ITimeSeriesItem _timeSeriesItem;
+    private dynamic _timeSeriesItem;
 
     /// <summary>
     /// The instance that the standard time series belongs to.
     /// </summary>
     private VisumInstance _instance;
 
-    internal VisumTimeSeriesItem(ITimeSeriesItem timeSeriesItem, VisumInstance instance)
+    internal VisumTimeSeriesItem(dynamic timeSeriesItem, VisumInstance instance)
     {
         _timeSeriesItem = timeSeriesItem;
         _instance = instance;
@@ -154,7 +152,7 @@ public class VisumTimeSeriesItem : IDisposable
         {
             if (_instance.Visum is not null)
             {
-                return new VisumMatrix((IMatrix)_timeSeriesItem.AttValue["MatrixRef"], ObjectTypeRefT.OBJECTTYPEREF_ZONE, _instance.Visum);
+                return new VisumMatrix(_timeSeriesItem.AttValue["MatrixRef"], ObjectTypeRefT.OBJECTTYPEREF_ZONE, _instance.Visum);
             }
             throw new VisumException("The Visum instance was already disposed.");
         }
@@ -197,11 +195,8 @@ public class VisumTimeSeriesItem : IDisposable
     {
         if (!disposedValue)
         {
-            if (disposing)
-            {
-                COM.ReleaseCOMObject(ref _timeSeriesItem!, false);
-                _instance = null!;
-            }
+            COM.ReleaseCOMObject(ref _timeSeriesItem!, false);
+            _instance = null!;
             disposedValue = true;
         }
     }

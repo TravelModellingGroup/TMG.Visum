@@ -6,69 +6,104 @@ public class TestDemandTimeSeries
     [TestMethod]
     public void CreateDemandTimeSeries()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var timeSeries = instance.GetStandardTimeSeries(1);
-        using var demandTimeSeries = instance.CreateDemandTimeSeries("code", "name", timeSeries);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var timeSeries = instance.GetStandardTimeSeries(1);
+            using var demandTimeSeries = instance.CreateDemandTimeSeries("code", "name", timeSeries);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void GetDemandTimeSeriesTimes()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
-        using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
-        using var demandTimeSeries = demandSegment.DemandTimeSeries;
-        Assert.IsNotNull(demandTimeSeries);
-        using var standardTimeSeries = demandTimeSeries.StandardTimeSeries;
-        Assert.AreEqual(1, standardTimeSeries.Count);
-        var date = 1;
-        using var item = standardTimeSeries[0];
-        item.SetTime(date, 0, date + 1, 0);
-        Assert.AreEqual(date, item.StartDay);
-        Assert.AreEqual(date + 1, item.EndDay);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+            using var demandTimeSeries = demandSegment.DemandTimeSeries;
+            Assert.IsNotNull(demandTimeSeries);
+            using var standardTimeSeries = demandTimeSeries.StandardTimeSeries;
+            Assert.AreEqual(1, standardTimeSeries.Count);
+            var date = 1;
+            using var item = standardTimeSeries[0];
+            item.SetTime(date, 0, date + 1, 0);
+            Assert.AreEqual(date, item.StartDay);
+            Assert.AreEqual(date + 1, item.EndDay);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void DeleteDemandTimeSeriesUsingReference()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
-        using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
-        using var demandTimeSeries = demandSegment.DemandTimeSeries;
-        Assert.IsNotNull(demandTimeSeries);
-        instance.RemoveDemandTimeSeries(demandTimeSeries);        
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+            using var demandTimeSeries = demandSegment.DemandTimeSeries;
+            Assert.IsNotNull(demandTimeSeries);
+            instance.RemoveDemandTimeSeries(demandTimeSeries);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void DeleteDemandTimeSeriesByNumber()
     {
         int number;
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
         {
-            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
-            using var demandTimeSeries = demandSegment.DemandTimeSeries;
-            Assert.IsNotNull(demandTimeSeries);
-            number = demandTimeSeries.Number;
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            {
+                using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+                using var demandTimeSeries = demandSegment.DemandTimeSeries;
+                Assert.IsNotNull(demandTimeSeries);
+                number = demandTimeSeries.Number;
+            }
+            instance.RemoveDemandTimeSeries(number);
         }
-        instance.RemoveDemandTimeSeries(number);
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void DeleteDemandTimeSeriesByCode()
     {
         const string code = "DemandSegment";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
         {
-            using var demandSegment = instance.CreateDemandSegment(code, mode);
-            using var demandTimeSeries = demandSegment.DemandTimeSeries;
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            {
+                using var demandSegment = instance.CreateDemandSegment(code, mode);
+                using var demandTimeSeries = demandSegment.DemandTimeSeries;
+            }
+            instance.RemoveDemandTimeSeries(code);
         }
-        instance.RemoveDemandTimeSeries(code);
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
 }

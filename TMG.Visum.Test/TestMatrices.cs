@@ -7,160 +7,200 @@ public class TestMatrices
     public void CreateMatrix()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance();
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
+        var instance = new VisumInstance();
+        try
+        {
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void TryGetNonExistingMatrix()
     {
-        using var instance = new VisumInstance();
-        Assert.IsFalse(instance.TryGetMatrix(1, out var matrix));
-        Assert.IsNull(matrix);
+        var instance = new VisumInstance();
+        try
+        {
+            Assert.IsFalse(instance.TryGetMatrix(1, out var matrix));
+            Assert.IsNull(matrix);
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void GetNonExistingMatrix()
     {
-        using var instance = new VisumInstance();
-        Assert.ThrowsException<VisumException>(() => _ = instance.GetMatrix(1));
+        var instance = new VisumInstance();
+        try
+        {
+            Assert.ThrowsException<VisumException>(() => _ = instance.GetMatrix(1));
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void DeleteMatrix()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance();
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.IsTrue(instance.DeleteMatrix(1));
-        Assert.IsFalse(instance.DeleteMatrix(1));
+        var instance = new VisumInstance();
+        try
+        {
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.IsTrue(instance.DeleteMatrix(1));
+            Assert.IsFalse(instance.DeleteMatrix(1));
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void CreatingMatrixWithZones()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.AreEqual(0, matrix.Sum());
-        Assert.AreEqual(3, matrix.Rows);
-        Assert.AreEqual(3, matrix.Columns);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.AreEqual(0, matrix.Sum());
+            Assert.AreEqual(3, matrix.Rows);
+            Assert.AreEqual(3, matrix.Columns);
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void GettingValues2DDouble()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.AreEqual(0, matrix.Sum());
-        Assert.AreEqual(3, matrix.Rows);
-        Assert.AreEqual(3, matrix.Columns);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.AreEqual(0, matrix.Sum());
+            Assert.AreEqual(3, matrix.Rows);
+            Assert.AreEqual(3, matrix.Columns);
 
-        var valuesBack = matrix.GetValuesAsDoubleMatrix();
-        Assert.IsNotNull(valuesBack);
-        Assert.AreEqual(3, valuesBack.Length, "The row size is not expected!");
-        Assert.AreEqual(3, valuesBack[0].Length, "The row size is not expected!");
+            var valuesBack = matrix.GetValuesAsDoubleMatrix();
+            Assert.IsNotNull(valuesBack);
+            Assert.AreEqual(3, valuesBack.Length, "The row size is not expected!");
+            Assert.AreEqual(3, valuesBack[0].Length, "The row size is not expected!");
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void SettingAndGettingValues1DFloat()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.AreEqual(0, matrix.Sum());
-        Assert.AreEqual(3, matrix.Rows);
-        Assert.AreEqual(3, matrix.Columns);
-        var data = new float[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        matrix.SetValues(data);
-        var valuesBack = matrix.GetValuesAsFloatArray();
-        Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
-        Assert.AreEqual(9, data.Length, "The number of rows are wrong when reading it back.");
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.AreEqual(0, matrix.Sum());
+            Assert.AreEqual(3, matrix.Rows);
+            Assert.AreEqual(3, matrix.Columns);
+            var data = new float[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            matrix.SetValues(data);
+            var valuesBack = matrix.GetValuesAsFloatArray();
+            Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
+            Assert.AreEqual(9, data.Length, "The number of rows are wrong when reading it back.");
 
-        CompareMatrix(data, valuesBack);
+            CompareMatrix(data, valuesBack);
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void SettingAndGettingValues2DFloat()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.AreEqual(0, matrix.Sum());
-        Assert.AreEqual(3, matrix.Rows);
-        Assert.AreEqual(3, matrix.Columns);
-        var data = new float[][]
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
         {
-            new float[] {1,2,3},
-            new float[] {4,5,6},
-            new float[] {7,8,9},
-        };
-        matrix.SetValues(data);
-        var valuesBack = matrix.GetValuesAsFloatMatrix();
-        Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
-        Assert.AreEqual(3, data.Length, "The number of rows are wrong when reading it back.");
-        Assert.AreEqual(3, data[0].Length, "The number of columns are wrong when reading it back.");
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.AreEqual(0, matrix.Sum());
+            Assert.AreEqual(3, matrix.Rows);
+            Assert.AreEqual(3, matrix.Columns);
+            var data = new float[][]
+            {
+                new float[] {1,2,3},
+                new float[] {4,5,6},
+                new float[] {7,8,9},
+            };
+            matrix.SetValues(data);
+            var valuesBack = matrix.GetValuesAsFloatMatrix();
+            Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
+            Assert.AreEqual(3, data.Length, "The number of rows are wrong when reading it back.");
+            Assert.AreEqual(3, data[0].Length, "The number of columns are wrong when reading it back.");
 
-        CompareMatrix(data, valuesBack);
+            CompareMatrix(data, valuesBack);
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void SettingAndGettingValues1DDouble()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.AreEqual(0, matrix.Sum());
-        Assert.AreEqual(3, matrix.Rows);
-        Assert.AreEqual(3, matrix.Columns);
-        var data = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        matrix.SetValues(data);
-        var valuesBack = matrix.GetValuesAsDoubleArray();
-        Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
-        Assert.AreEqual(9, data.Length, "The number of rows are wrong when reading it back.");
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.AreEqual(0, matrix.Sum());
+            Assert.AreEqual(3, matrix.Rows);
+            Assert.AreEqual(3, matrix.Columns);
+            var data = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            matrix.SetValues(data);
+            var valuesBack = matrix.GetValuesAsDoubleArray();
+            Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
+            Assert.AreEqual(9, data.Length, "The number of rows are wrong when reading it back.");
 
-        CompareMatrix(data, valuesBack);
+            CompareMatrix(data, valuesBack);
+        }
+        finally { instance.Dispose(); }
     }
 
     [TestMethod]
     public void SettingAndGettingValues2DDouble()
     {
         const string name = "TestMatrix";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var matrix = instance.CreateDemandMatrix(1, name);
-        Assert.IsNotNull(matrix);
-        Assert.AreEqual(name, matrix.Name);
-        Assert.AreEqual(0, matrix.Sum());
-        Assert.AreEqual(3, matrix.Rows);
-        Assert.AreEqual(3, matrix.Columns);
-        var data = new double[][]
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
         {
-            new double[] {1,2,3},
-            new double[] {4,5,6},
-            new double[] {7,8,9},
-        };
-        matrix.SetValues(data);
-        var valuesBack = matrix.GetValuesAsDoubleMatrix();
-        Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
-        Assert.AreEqual(3, data.Length, "The number of rows are wrong when reading it back.");
-        Assert.AreEqual(3, data[0].Length, "The number of columns are wrong when reading it back.");
+            using var matrix = instance.CreateDemandMatrix(1, name);
+            Assert.IsNotNull(matrix);
+            Assert.AreEqual(name, matrix.Name);
+            Assert.AreEqual(0, matrix.Sum());
+            Assert.AreEqual(3, matrix.Rows);
+            Assert.AreEqual(3, matrix.Columns);
+            var data = new double[][]
+            {
+                new double[] {1,2,3},
+                new double[] {4,5,6},
+                new double[] {7,8,9},
+            };
+            matrix.SetValues(data);
+            var valuesBack = matrix.GetValuesAsDoubleMatrix();
+            Assert.IsNotNull(valuesBack, "We got back a null when reading the array back.");
+            Assert.AreEqual(3, data.Length, "The number of rows are wrong when reading it back.");
+            Assert.AreEqual(3, data[0].Length, "The number of columns are wrong when reading it back.");
 
-        CompareMatrix(data, valuesBack);
+            CompareMatrix(data, valuesBack);
+        }
+        finally { instance.Dispose(); }
     }
 
     private static void CompareMatrix(float[] data, float[] valuesBack)

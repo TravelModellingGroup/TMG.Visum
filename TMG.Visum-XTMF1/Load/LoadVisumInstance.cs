@@ -8,6 +8,9 @@ public class LoadVisumInstance : IDataSource<VisumInstance>, IDisposable
     [SubModelInformation(Required = false, Description = "An optional network that we can load when creating the instance.")]
     public FileLocation? VersionFile;
 
+    [RunParameter("VISUM Version", VisumVersion.Visum2024, "The VISUM major version to activate (supported: 2024, 2025, 2026).")]
+    public VisumVersion VisumVersion = VisumVersion.Visum2024;
+
     public VisumInstance? GiveData()
     {
         return _visumInstance;
@@ -21,7 +24,9 @@ public class LoadVisumInstance : IDataSource<VisumInstance>, IDisposable
             {
                 _visumInstance.Dispose();
             }
-            _visumInstance = VersionFile is not null ? new VisumInstance(VersionFile) : new VisumInstance();
+            _visumInstance = VersionFile is not null
+                ? new VisumInstance(VersionFile, VisumVersion)
+                : new VisumInstance(VisumVersion);
         }
         catch (VisumException ex)
         {

@@ -8,8 +8,8 @@ internal static class MainZoneExtensions
     /// <param name="zone"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ZoneNumber(this IMainZone zone)
+    public static int ZoneNumber(object zone)
     {
-        return (int)(double)zone.AttValue["No"];
+        return (int)(double)((dynamic)zone).AttValue["No"];
     }
 }

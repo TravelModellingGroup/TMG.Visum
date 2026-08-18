@@ -9,9 +9,9 @@ internal static class LineRouteItemExtensions
     /// <param name="us">The line route item to process.</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double GetBoardings(this ILineRouteItem us)
+    public static double GetBoardings(object us)
     {
-        return (double)us.AttValue["PassBoard(AP)"];
+        return (double)((dynamic)us).AttValue["PassBoard(AP)"];
     }
 
     /// <summary>
@@ -20,19 +20,19 @@ internal static class LineRouteItemExtensions
     /// <param name="us">The line route item to operate on.</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ILink? GetInLink(this ILineRouteItem us, IVisum instance)
+    public static dynamic? GetInLink(object us, object instance)
     {
         var node = GetNode(us, instance);
         if (node is null)
         {
             return null;
         }
-        var outLinkNo = us.AttValue["INLINK\\NO"];
+        var outLinkNo = ((dynamic)us).AttValue["INLINK\\NO"];
         if (outLinkNo is null)
         {
             return null;
         }
-        return instance.Net.Links.ItemByKey[node, outLinkNo];
+        return ((dynamic)instance).Net.Links.ItemByKey[node, outLinkNo];
     }
 
     /// <summary>
@@ -41,15 +41,15 @@ internal static class LineRouteItemExtensions
     /// <param name="us">The line route item to operate on.</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ILink? GetOutLink(this ILineRouteItem us, IVisum instance)
+    public static dynamic? GetOutLink(object us, object instance)
     {
-        var nodeNumber = us.AttValue["NODENO"];
-        var outLinkToNode = us.AttValue["OUTLINK\\TONODENO"];
+        var nodeNumber = ((dynamic)us).AttValue["NODENO"];
+        var outLinkToNode = ((dynamic)us).AttValue["OUTLINK\\TONODENO"];
         if (outLinkToNode is null)
         {
             return null;
         }
-        return instance.Net.Links.ItemByKey[nodeNumber, outLinkToNode];
+        return ((dynamic)instance).Net.Links.ItemByKey[nodeNumber, outLinkToNode];
     }
 
     /// <summary>
@@ -58,11 +58,10 @@ internal static class LineRouteItemExtensions
     /// <param name="us">The line route item to operate on.</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INode? GetNode(this ILineRouteItem us, IVisum instance)
+    public static dynamic? GetNode(object us, object instance)
     {
-        var nodeNumber = us.AttValue["NODENO"];
-        var node = instance.Net.Nodes.ItemByKey[nodeNumber];
-        return node as INode;
+        var nodeNumber = ((dynamic)us).AttValue["NODENO"];
+        return ((dynamic)instance).Net.Nodes.ItemByKey[nodeNumber];
     }
 
 }

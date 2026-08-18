@@ -42,11 +42,12 @@ public sealed class CalculateRoadLoS : BaseAction<VisumInstance>
     public override void Invoke(VisumInstance instance)
     {
         VisumDemandSegment? segment = null;
+        List<VisumMatrix>? matrices = null;
         try
         {
             segment = GetSegment(instance);
             var searchCriterion = SearchCriterion.Invoke();
-            List<VisumMatrix> matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type.Invoke()).ToList(), searchCriterion);
+            matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type.Invoke()).ToList(), searchCriterion);
             for (int i = 0; i < matrices.Count; i++)
             {
                 var matrixCode = ToExport[i].MatrixCode.Invoke();
@@ -64,7 +65,6 @@ public sealed class CalculateRoadLoS : BaseAction<VisumInstance>
                         matrices[i].Name = newName;
                     }
                 }
-                matrices[i].Dispose();
             }
         }
         catch (VisumException e)
@@ -73,6 +73,13 @@ public sealed class CalculateRoadLoS : BaseAction<VisumInstance>
         }
         finally
         {
+            if (matrices is not null)
+            {
+                foreach (var matrix in matrices)
+                {
+                    matrix.Dispose();
+                }
+            }
             segment?.Dispose();
         }
     }

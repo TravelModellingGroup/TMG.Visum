@@ -15,13 +15,21 @@ public sealed class ExportMatrixToResource : IVisumTool
 
     public void Execute(VisumInstance visumInstance)
     {
-        if(!visumInstance.TryGetMatrixByName(MatrixName, out var matrix) || matrix is null)
+        VisumMatrix? matrix = null;
+        try
         {
-            throw new XTMFRuntimeException(this, "There was no matrix with the name");
+            if (!visumInstance.TryGetMatrixByName(MatrixName, out matrix) || matrix is null)
+            {
+                throw new XTMFRuntimeException(this, "There was no matrix with the name");
+            }
+            var data = matrix.GetValuesAsFloatMatrix();
+            var sparseMatrix = SparseTwinIndex<float>.CreateSquareTwinIndex(GetZoneSystemIndexes(), data);
+            WriteTo.SetData(sparseMatrix);
         }
-        var data = matrix.GetValuesAsFloatMatrix();
-        var sparseMatrix = SparseTwinIndex<float>.CreateSquareTwinIndex(GetZoneSystemIndexes(), data);
-        WriteTo.SetData(sparseMatrix);
+        finally
+        {
+            matrix?.Dispose();
+        }
     }
 
     private int[] GetZoneSystemIndexes()

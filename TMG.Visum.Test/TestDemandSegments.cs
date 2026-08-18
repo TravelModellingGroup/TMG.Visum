@@ -6,45 +6,73 @@ public class TestDemandSegments
     [TestMethod]
     public void CreateDemandSegment()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
-        using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void OccupancyRate()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
-        using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
-        const double rate = 2.0;
-        demandSegment.OccupancyRate = rate;
-        Assert.AreEqual(rate, demandSegment.OccupancyRate);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+            const double rate = 2.0;
+            demandSegment.OccupancyRate = rate;
+            Assert.AreEqual(rate, demandSegment.OccupancyRate);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void PrFacAH()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
-        using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
-        const double rate = 2.0;
-        demandSegment.PrFacAH = rate;
-        Assert.AreEqual(rate, demandSegment.PrFacAH);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+            const double rate = 2.0;
+            demandSegment.PrFacAH = rate;
+            Assert.AreEqual(rate, demandSegment.PrFacAH);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void PrFacAP()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
-        using var mode = instance.CreateMode("Car", transitSystem);
-        using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
-        const double rate = 2.0;
-        demandSegment.PrFacAP = rate;
-        Assert.AreEqual(rate, demandSegment.PrFacAP);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSystem = instance.CreateTransitSystem("RoadNetwork", ModeType.Road);
+            using var mode = instance.CreateMode("Car", transitSystem);
+            using var demandSegment = instance.CreateDemandSegment("DemandSegment", mode);
+            const double rate = 2.0;
+            demandSegment.PrFacAP = rate;
+            Assert.AreEqual(rate, demandSegment.PrFacAP);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 }

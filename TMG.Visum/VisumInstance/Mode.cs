@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using VISUMLIB;
 
 namespace TMG.Visum;
 
@@ -65,9 +64,9 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            foreach(IMode m in _visum.Net.Modes)
+            foreach (dynamic m in _visum.Net.Modes)
             {
-                if(code.Equals(m.GetCode()))
+                if (code.Equals((string)m.AttValue["code"]))
                 {
                     mode = new VisumMode(m, this);
                     return true;

@@ -5,28 +5,31 @@
 /// </summary>
 internal static class ZonesExtensions
 {
-    public static int[] GetZoneNumbers(this IZones us)
+    public static int[] GetZoneNumbers(object us)
     {
-        int[] ret = new int[us.Count];
+        dynamic zones = us;
+        int[] ret = new int[zones.Count];
         int pos = 0;
-        foreach (IZone zone in us)
+        foreach (object zone in zones)
         {
-            ret[pos++] = zone.ZoneNumber();
+            ret[pos++] = (int)(double)((dynamic)zone).AttValue["No"];
         }
         return ret;
     }
 
-    public static (int[] zoneNumber, float[] x, float[] y) GetZoneInformation(this IZones us)
+    public static (int[] zoneNumber, float[] x, float[] y) GetZoneInformation(object us)
     {
-        int[] zoneNumber = new int[us.Count];
-        float[] x = new float[us.Count];
-        float[] y = new float[us.Count];
+        dynamic zones = us;
+        int[] zoneNumber = new int[zones.Count];
+        float[] x = new float[zones.Count];
+        float[] y = new float[zones.Count];
         int pos = 0;
-        foreach (IZone zone in us)
+        foreach (object zone in zones)
         {
-            zoneNumber[pos] = zone.ZoneNumber();
-            x[pos] = (float)zone.X();
-            y[pos] = (float)zone.Y();
+            dynamic currentZone = zone;
+            zoneNumber[pos] = (int)(double)currentZone.AttValue["No"];
+            x[pos] = (float)(double)currentZone.AttValue["XCoord"];
+            y[pos] = (float)(double)currentZone.AttValue["YCoord"];
             pos++;
         }
         return (zoneNumber, x, y);

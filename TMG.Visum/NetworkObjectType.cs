@@ -23,14 +23,15 @@ internal static class NetworkObjectTypeHelper
     /// </summary>
     /// <param name="type">The type of network object to work with</param>
     /// <param name="instance">The VISUM instance to work with.</param>
-    /// <returns>The IAttributes for the given network object type.</returns>
-    internal static IAttributes GetAttributes(this NetworkObjectType type, IVisum instance)
+    /// <returns>The attributes collection for the given network object type.</returns>
+    internal static dynamic GetAttributes(this NetworkObjectType type, object instance)
     {
+        dynamic visum = instance;
         return type switch
         {
-            NetworkObjectType.Node => instance.Net.Nodes.Attributes,
-            NetworkObjectType.Link => instance.Net.Links.Attributes,
-            NetworkObjectType.TimeProfile => instance.Net.TimeProfiles.Attributes,
+            NetworkObjectType.Node => visum.Net.Nodes.Attributes,
+            NetworkObjectType.Link => visum.Net.Links.Attributes,
+            NetworkObjectType.TimeProfile => visum.Net.TimeProfiles.Attributes,
             _ => throw new NotImplementedException("Unknown NetworkObjectType"),
         };
     }
@@ -51,19 +52,20 @@ internal static class NetworkObjectTypeHelper
     /// </summary>
     /// <param name="name">The name of the attribute to create.</param>
     /// <param name="netObjectType">The type of attribute to create.</param>
-    internal static void CreateAttributeInternal(this NetworkObjectType type, IVisum instance, string name, AttributeTypes attributeType)
+    internal static void CreateAttributeInternal(this NetworkObjectType type, object instance, string name, AttributeTypes attributeType)
     {
+        dynamic visum = instance;
         var convertedType = GetValueType(attributeType);
         switch (type)
         {
             case NetworkObjectType.Node:
-                instance.Net.Nodes.AddUserDefinedAttribute(name, name, name, convertedType);
+                visum.Net.Nodes.AddUserDefinedAttribute(name, name, name, convertedType);
                 break;
             case NetworkObjectType.Link:
-                instance.Net.Links.AddUserDefinedAttribute(name, name, name, convertedType);
+                visum.Net.Links.AddUserDefinedAttribute(name, name, name, convertedType);
                 break;
             case NetworkObjectType.TimeProfile:
-                instance.Net.TimeProfiles.AddUserDefinedAttribute(name, name, name, convertedType);
+                visum.Net.TimeProfiles.AddUserDefinedAttribute(name, name, name, convertedType);
                 break;
             default:
                 throw new NotImplementedException("Unknown NetworkObjectType");

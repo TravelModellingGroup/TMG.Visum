@@ -6,19 +6,33 @@ public class TestZones
     [TestMethod]
     public void ZoneNumberCount()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        Assert.AreEqual(3, instance.GetZoneCount());
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            Assert.AreEqual(3, instance.GetZoneCount());
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void GetZoneNumbers()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        var zones = instance.GetZoneNumbers();
-        Assert.AreEqual(3, zones.Length);
-        for (int i = 0; i < zones.Length; i++)
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
         {
-            Assert.AreEqual(i + 1, zones[i]);
+            var zones = instance.GetZoneNumbers();
+            Assert.AreEqual(3, zones.Length);
+            for (int i = 0; i < zones.Length; i++)
+            {
+                Assert.AreEqual(i + 1, zones[i]);
+            }
+        }
+        finally
+        {
+            instance.Dispose();
         }
     }
 

@@ -11,6 +11,7 @@ public sealed class LoadVersionFile : ISelfContainedModule
 
     public void Start()
     {
+        var loaded = Visum.Loaded;
         var instance = Visum.LoadInstance();
         try
         {
@@ -19,6 +20,13 @@ public sealed class LoadVersionFile : ISelfContainedModule
         catch (VisumException ex)
         {
             throw new XTMFRuntimeException(this, ex);
+        }
+        finally
+        {
+            if (!loaded)
+            {
+                Visum.UnloadData();
+            }
         }
     }
 

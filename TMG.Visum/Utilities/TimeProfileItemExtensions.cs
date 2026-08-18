@@ -9,9 +9,9 @@ internal static class TimeProfileItemExtensions
     /// </summary>
     /// <param name="us">The time profile item to operate on.</param>
     /// <returns>The accumulated run time in seconds.</returns>
-    public static double GetAccumulatedRunTime(this ITimeProfileItem us)
+    public static double GetAccumulatedRunTime(object us)
     {
-        return (double)us.AttValue["AccumRunTime"];
+        return (double)((dynamic)us).AttValue["AccumRunTime"];
     }
 
     /// <summary>
@@ -19,9 +19,9 @@ internal static class TimeProfileItemExtensions
     /// </summary>
     /// <param name="us">The time profile item to operate on.</param>
     /// <returns>The accumulated run distance.</returns>
-    public static double GetAccumulatedRunDistance(this ITimeProfileItem us)
+    public static double GetAccumulatedRunDistance(object us)
     {
-        return (double)us.AttValue["AccumLength"];
+        return (double)((dynamic)us).AttValue["AccumLength"];
     }
 
 }

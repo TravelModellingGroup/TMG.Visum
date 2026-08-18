@@ -7,13 +7,14 @@ internal static class MainZonesExtensions
     /// </summary>
     /// <param name="us"></param>
     /// <returns></returns>
-    public static int[] GetZoneNumbers(this IMainZones us)
+    public static int[] GetZoneNumbers(object us)
     {
-        int[] zoneNumbers = new int[us.Count];
+        dynamic zones = us;
+        int[] zoneNumbers = new int[zones.Count];
         int pos = 0;
-        foreach (IMainZone zone in us)
+        foreach (object zone in zones)
         {
-            zoneNumbers[pos++] = zone.ZoneNumber();
+            zoneNumbers[pos++] = (int)(double)((dynamic)zone).AttValue["No"];
         }
         return zoneNumbers;
     }
