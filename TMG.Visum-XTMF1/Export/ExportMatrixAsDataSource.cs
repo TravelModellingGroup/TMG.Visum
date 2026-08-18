@@ -59,16 +59,24 @@ public sealed class ExportMatrixAsDataSource : IDataSource<SparseTwinIndex<float
     {
         var loaded = Instance.Loaded;
         var instance = Instance.LoadInstance();
-        if (!instance.TryGetMatrixByName(MatrixName, out var matrix) || matrix is null)
+        VisumMatrix? matrix = null;
+        try
         {
-            throw new XTMFRuntimeException(this, "There was no matrix with the name");
+            if (!instance.TryGetMatrixByName(MatrixName, out matrix) || matrix is null)
+            {
+                throw new XTMFRuntimeException(this, "There was no matrix with the name");
+            }
+            var data = matrix.GetValuesAsFloatMatrix();
+            var sparseMatrix = SparseTwinIndex<float>.CreateSquareTwinIndex(GetZoneSystemIndexes(), data);
+            _data = sparseMatrix;
         }
-        var data = matrix.GetValuesAsFloatMatrix();
-        var sparseMatrix = SparseTwinIndex<float>.CreateSquareTwinIndex(GetZoneSystemIndexes(), data);
-        _data = sparseMatrix;
-        if (!loaded)
+        finally
         {
-            Instance.UnloadData();
+            matrix?.Dispose();
+            if (!loaded)
+            {
+                Instance.UnloadData();
+            }
         }
     }
 

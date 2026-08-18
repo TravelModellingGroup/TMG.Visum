@@ -13,6 +13,7 @@ public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
 
     public void LoadData()
     {
+        var loaded = Visum.Loaded;
         var instance = Visum.LoadInstance();
         VisumMatrix? matrix = null;
         try
@@ -32,6 +33,10 @@ public class LoadMatrixFromVisum : IDataSource<SparseTwinIndex<float>>
         finally
         {
             matrix?.Dispose();
+            if (!loaded)
+            {
+                Visum.UnloadData();
+            }
         }
     }
 

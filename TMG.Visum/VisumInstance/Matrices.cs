@@ -39,14 +39,14 @@ public partial class VisumInstance : IDisposable
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            if (!TryGetMatrixInner(number, out IMatrix? matrix))
+            if (!TryGetMatrixInner(number, out dynamic? matrix))
             {
                 matrix = _visum.Net.AddMatrix(number,
                 ObjectTypeRefT.OBJECTTYPEREF_ZONE,
                 type);
             }
             matrix.Init();
-            matrix.SetName(matrixName);
+            matrix.AttValue["Name"] = matrixName;
             return new VisumMatrix(matrix, ObjectTypeRefT.OBJECTTYPEREF_ZONE, _visum);
         }
         catch (Exception ex)
@@ -124,11 +124,11 @@ public partial class VisumInstance : IDisposable
     /// <param name="number">The matrix number to lookup</param>
     /// <param name="matrix">The matrix if it exists.</param>
     /// <returns>True if we found the matrix, false otherwise.</returns>
-    private bool TryGetMatrixInner(int number, [NotNullWhen(true)] out IMatrix? matrix)
+    private bool TryGetMatrixInner(int number, [NotNullWhen(true)] out dynamic? matrix)
     {
-        foreach (IMatrix m in _visum!.Net.Matrices)
+        foreach (dynamic m in _visum!.Net.Matrices)
         {
-            if (m.GetNumber() == number)
+            if (((int)(double)m.AttValue["No"]) == number)
             {
                 matrix = m;
                 return true;
@@ -144,11 +144,11 @@ public partial class VisumInstance : IDisposable
     /// <param name="name">The matrix name to lookup</param>
     /// <param name="matrix">The matrix if it exists.</param>
     /// <returns>True if we found the matrix, false otherwise.</returns>
-    private bool TryGetMatrixInner(string name, [NotNullWhen(true)] out IMatrix? matrix)
+    private bool TryGetMatrixInner(string name, [NotNullWhen(true)] out dynamic? matrix)
     {
-        foreach (IMatrix m in _visum!.Net.Matrices)
+        foreach (dynamic m in _visum!.Net.Matrices)
         {
-            if (m.GetName() == name)
+            if (((string)m.AttValue["Name"]) == name)
             {
                 matrix = m;
                 return true;
@@ -300,23 +300,33 @@ public partial class VisumInstance : IDisposable
     /// <returns>True if at least one matrix was removed.</returns>
     internal bool DeleteMatrixByCodeInner(string code)
     {
-        if(_visum is null)
+        if (_visum is null)
         {
             return false;
         }
-        var toRemove = new List<IMatrix>();
-        foreach(IMatrix matrix in _visum.Net.Matrices)
+        var matrices = _visum.Net.Matrices;
+        var toRemove = new List<dynamic>();
+        try
         {
-            if(matrix.GetCode().Equals(code, StringComparison.OrdinalIgnoreCase))
+            foreach (dynamic matrix in matrices)
             {
-                toRemove.Add(matrix);
+                if (((string)matrix.AttValue["Code"]).Equals(code, StringComparison.OrdinalIgnoreCase))
+                {
+                    toRemove.Add(matrix);
+                }
             }
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                var matrix = toRemove[i];
+                _visum.Net.RemoveMatrix(matrix);
+                COM.ReleaseCOMObject(ref matrix, false);
+            }
+            return toRemove.Count > 0;
         }
-        foreach( var matrix in toRemove)
+        finally
         {
-            _visum.Net.RemoveMatrix(matrix);
+            COM.ReleaseCOMObject(ref matrices, false);
         }
-        return toRemove.Count > 0;
     }
 
     /// <summary>
@@ -354,18 +364,28 @@ public partial class VisumInstance : IDisposable
         {
             return false;
         }
-        var toRemove = new List<IMatrix>();
-        foreach (IMatrix matrix in _visum.Net.Matrices)
+        var matrices = _visum.Net.Matrices;
+        var toRemove = new List<dynamic>();
+        try
         {
-            if (matrix.GetName().Equals(name, StringComparison.OrdinalIgnoreCase))
+            foreach (dynamic matrix in matrices)
             {
-                toRemove.Add(matrix);
+                if (((string)matrix.AttValue["Name"]).Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    toRemove.Add(matrix);
+                }
             }
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                var matrix = toRemove[i];
+                _visum.Net.RemoveMatrix(matrix);
+                COM.ReleaseCOMObject(ref matrix, false);
+            }
+            return toRemove.Count > 0;
         }
-        foreach (var matrix in toRemove)
+        finally
         {
-            _visum.Net.RemoveMatrix(matrix);
+            COM.ReleaseCOMObject(ref matrices, false);
         }
-        return toRemove.Count > 0;
     }
 }

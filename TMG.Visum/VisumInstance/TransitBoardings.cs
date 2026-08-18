@@ -28,11 +28,11 @@ public partial class VisumInstance
                 OnlyActive = true,
                 ResultAttributeName = "ADDVAL1"
             });
-            foreach(ILine line in _visum.Net.Lines)
+            foreach (dynamic line in _visum.Net.Lines)
             {
                 double boardings = 0.0;
                 boardings = (double)line.AttValue["ADDVAL1"];
-                ret.Add((line.GetName(), (float)boardings));
+                ret.Add(((string)line.AttValue["Name"], (float)boardings));
             }
             return ret;
         }

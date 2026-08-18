@@ -2,12 +2,13 @@
 
 internal static class StopAreasExtensions
 {
-    public static int[] GetStopAreaNumbers(this IStopAreas us)
+    public static int[] GetStopAreaNumbers(object us)
     {
-        List<int> zoneNumbers = new(us.Count);
-        foreach (IStopArea zone in us)
+        dynamic stopAreas = us;
+        List<int> zoneNumbers = new(stopAreas.Count);
+        foreach (object zone in stopAreas)
         {
-            zoneNumbers.Add(zone.StopNumber());
+            zoneNumbers.Add(StopAreaExtensions.StopNumber(zone));
         }
         return zoneNumbers.ToArray();
     }

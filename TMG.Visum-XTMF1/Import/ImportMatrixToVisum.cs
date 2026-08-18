@@ -17,6 +17,7 @@ public sealed class ImportMatrixToVisum : ISelfContainedModule
 
     public void Start()
     {
+        var loaded = Visum.Loaded;
         var instance = Visum.LoadInstance();
         VisumMatrix? matrix = null;
         try
@@ -39,6 +40,10 @@ public sealed class ImportMatrixToVisum : ISelfContainedModule
         finally
         {
             matrix?.Dispose();
+            if (!loaded)
+            {
+                Visum.UnloadData();
+            }
         }
     }
 

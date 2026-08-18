@@ -7,9 +7,9 @@ internal static class LineExtensions
     /// </summary>
     /// <param name="line">The transit line to get the name for.</param>
     /// <returns>The name of the transit line.</returns>
-    internal static string GetName(this ILine line)
+    internal static string GetName(object line)
     {
-        return line.AttValue["Name"] as string ?? string.Empty;
+        return ((dynamic)line).AttValue["Name"] as string ?? string.Empty;
     }
 
 }

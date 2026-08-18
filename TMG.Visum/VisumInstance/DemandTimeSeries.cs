@@ -21,7 +21,7 @@ public partial class VisumInstance
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
             int maxNumber = 1;
-            foreach (IDemandTimeSeries series in _visum.Net.DemandTimeSeriesCont)
+            foreach (dynamic series in _visum.Net.DemandTimeSeriesCont)
             {
                 maxNumber = Math.Max(maxNumber, (int)(double)series.AttValue["No"]);
             }
@@ -73,7 +73,7 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            foreach (IDemandTimeSeries series in _visum.Net.DemandTimeSeriesCont)
+            foreach (dynamic series in _visum.Net.DemandTimeSeriesCont)
             {
                 if (((string)series.AttValue["Code"]).Equals(code))
                 {
@@ -122,7 +122,7 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            foreach (IDemandTimeSeries series in _visum.Net.DemandTimeSeriesCont)
+            foreach (dynamic series in _visum.Net.DemandTimeSeriesCont)
             {
                 if (((string)series.AttValue["Code"]).Equals(code))
                 {
@@ -148,7 +148,7 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            foreach (IDemandTimeSeries series in _visum.Net.DemandTimeSeriesCont)
+            foreach (dynamic series in _visum.Net.DemandTimeSeriesCont)
             {
                 if (((int)(double)series.AttValue["No"]) == number)
                 {
@@ -194,7 +194,7 @@ public partial class VisumInstance
     internal VisumDemandTimeSeries GetDemandTimeSeriesInternal(int demandTimeSeriesNumber)
     {
         ObjectDisposedException.ThrowIf(_visum is null, this);
-        IDemandTimeSeries? ret = _visum.Net.DemandTimeSeriesCont.ItemByKey[demandTimeSeriesNumber];
+        dynamic ret = _visum.Net.DemandTimeSeriesCont.ItemByKey[demandTimeSeriesNumber];
         return ret is null
             ? throw new VisumException($"There is no demand time series with the number {demandTimeSeriesNumber}!")
             : new VisumDemandTimeSeries(ret, this);

@@ -16,7 +16,7 @@ public class TestTransitAssignment
     [TestMethod]
     public void HeadwayTransitAssignment()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
+        var instance = new VisumInstance("TestNetwork.ver");
         try
         {
             using var transitSegment = instance.GetDemandSegment("X");
@@ -36,6 +36,9 @@ public class TestTransitAssignment
         finally
         {
             //DEBUG: instance.SaveVersionFile("Temp.ver");
+            instance.Dispose();
+            instance = null;
+            Utilities.ForceGC();
         }
     }
 
@@ -45,7 +48,7 @@ public class TestTransitAssignment
     [TestMethod]
     public void MultipleHeadwayAssignments()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
+        var instance = new VisumInstance("TestNetwork.ver");
         try
         {
             using var transitSegment = instance.GetDemandSegment("X");
@@ -56,23 +59,28 @@ public class TestTransitAssignment
             var matrices = instance.ExecuteTransitAssignment(transitSegment,
                 new PutLoSTypes[]
                 {
-                        PutLoSTypes.PerceivedJourneyTime,
-                        PutLoSTypes.JourneyTime,
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
                 },
                 new HeadwayImpedanceParameters());
             DisposeMatrices(matrices);
+            matrices = null;
             // Execute a second transit assignment
-            matrices = instance.ExecuteTransitAssignment(transitSegment,
+            var matrices2 = instance.ExecuteTransitAssignment(transitSegment,
                 new PutLoSTypes[]
                 {
-                        PutLoSTypes.PerceivedJourneyTime,
-                        PutLoSTypes.JourneyTime,
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
                 },
                 new HeadwayImpedanceParameters());
+            DisposeMatrices(matrices2);
+            matrices2 = null;
         }
         finally
         {
-            //DEBUG: instance.SaveVersionFile("Temp.ver");
+            instance.Dispose();
+            instance = null;
+            Utilities.ForceGC();
         }
     }
 
@@ -83,7 +91,7 @@ public class TestTransitAssignment
     public void TestTransitAssignmentWithMultipleDays()
     {
         //using var instance = new VisumInstance(@"Z:\Projects\2023\Halifax\V4Input\BaseNetwork.ver");
-        using var instance = new VisumInstance(@"TestNetwork-Calendar.ver");
+        var instance = new VisumInstance(@"TestNetwork-Calendar.ver");
         try
         {
             using var transitSegment = instance.GetDemandSegment("X");
@@ -109,7 +117,8 @@ public class TestTransitAssignment
         }
         finally
         {
-            //DEBUG: instance.SaveVersionFile("Temp.ver");
+            instance.Dispose();
+            Utilities.ForceGC();
         }
     }
 
@@ -119,24 +128,32 @@ public class TestTransitAssignment
     [TestMethod]
     public void TestGetLineBoardings()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var transitSegment = instance.GetDemandSegment("X");
-        using var transitDemand = instance.CreateDemandMatrix(1, "X demand");
-        // Assign 3 demand for all OD.
-        transitDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
-        transitSegment.DemandMatrix = transitDemand;
-        var matrices = instance.ExecuteTransitAssignment(transitSegment,
-            new PutLoSTypes[]
-            {
-                    PutLoSTypes.PerceivedJourneyTime,
-                    PutLoSTypes.JourneyTime,
-            },
-            new HeadwayImpedanceParameters());
-        var boardings = instance.GetBoardings();
-        Assert.IsNotNull(boardings);
-        Assert.AreEqual(1, boardings.Count);
-        Assert.IsTrue(boardings.Sum(line => line.boardings) > 0);
-        DisposeMatrices(matrices);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var transitSegment = instance.GetDemandSegment("X");
+            using var transitDemand = instance.CreateDemandMatrix(1, "X demand");
+            // Assign 3 demand for all OD.
+            transitDemand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
+            transitSegment.DemandMatrix = transitDemand;
+            var matrices = instance.ExecuteTransitAssignment(transitSegment,
+                new PutLoSTypes[]
+                {
+                        PutLoSTypes.PerceivedJourneyTime,
+                        PutLoSTypes.JourneyTime,
+                },
+                new HeadwayImpedanceParameters());
+            var boardings = instance.GetBoardings();
+            Assert.IsNotNull(boardings);
+            Assert.AreEqual(1, boardings.Count);
+            Assert.IsTrue(boardings.Sum(line => line.boardings) > 0);
+            DisposeMatrices(matrices);
+        }
+        finally
+        {
+            instance.Dispose();
+            Utilities.ForceGC();
+        }
     }
 
     /// <summary>
@@ -145,49 +162,54 @@ public class TestTransitAssignment
     [TestMethod]
     public void TestSTSU()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var carSegment = instance.GetDemandSegment("C");
-        using var transitSegment = instance.GetDemandSegment("X");
-        using var demand = instance.CreateDemandMatrix(1, "X demand");
-        // Assign 3 demand for all OD.
-        demand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
-        carSegment.DemandMatrix = demand;
-        instance.ExecuteRoadAssignment(carSegment,
-            new BWFAssignment(new StabilityCriteria()));
-        transitSegment.DemandMatrix = demand;
-        const float autoCorrelcation = 1.0f;
-        // Speeds need to be in kmps not kmph
-        const float defaultSpeed = 35.0f / 3600.0f;
-        const float defaultStopDuration = 1.0f;
-        var matrices = instance.ExecuteTransitAssignment(transitSegment,
-            [
-                PutLoSTypes.PerceivedJourneyTime,
-                PutLoSTypes.JourneyTime,
-            ],
-            new HeadwayImpedanceParameters()
-            {
-                STSUParameters =
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var carSegment = instance.GetDemandSegment("C");
+            using var transitSegment = instance.GetDemandSegment("X");
+            using var demand = instance.CreateDemandMatrix(1, "X demand");
+            // Assign 3 demand for all OD.
+            demand.SetValues(Enumerable.Range(0, 9).Select(_ => 3.0f).ToArray());
+            carSegment.DemandMatrix = demand;
+            instance.ExecuteRoadAssignment(carSegment,
+                new BWFAssignment(new StabilityCriteria()));
+            transitSegment.DemandMatrix = demand;
+            const float autoCorrelcation = 1.0f;
+            // Speeds need to be in kmps not kmph
+            const float defaultSpeed = 35.0f / 3600.0f;
+            const float defaultStopDuration = 1.0f;
+            var matrices = instance.ExecuteTransitAssignment(transitSegment,
                 [
-                    new STSUParameters()
-                    {
-                        BoardingDuration = 0,
-                        AlightingDuration = 0,
-                        AutoCorrelation = autoCorrelcation,
-                        AutoDemandSegment = "C",
-                        DefaultEROWSpeed = defaultSpeed,
-                        StopDuration = defaultStopDuration,
-                        FilterFileName = "Bus.fil",
-                        BusFacilityAttributeName = "ExclusiveBusFacility"
-                    }
-                ]
-            });
+                    PutLoSTypes.PerceivedJourneyTime,
+                    PutLoSTypes.JourneyTime,
+                ],
+                new HeadwayImpedanceParameters()
+                {
+                    STSUParameters =
+                    [
+                        new STSUParameters()
+                        {
+                            BoardingDuration = 0,
+                            AlightingDuration = 0,
+                            AutoCorrelation = autoCorrelcation,
+                            AutoDemandSegment = "C",
+                            DefaultEROWSpeed = defaultSpeed,
+                            StopDuration = defaultStopDuration,
+                            FilterFileName = "Bus.fil",
+                            BusFacilityAttributeName = "ExclusiveBusFacility"
+                        }
+                    ]
+                });
 
-        // Now that we have our transit assignment complete we
-        // can test the STSU by finding all of the links that a line uses, and 
-        string? error = null;
-        var success = instance.TestSTSU(autoCorrelcation, defaultSpeed, defaultStopDuration, "C", ref error);
-        Assert.IsTrue(success, error);
-        DisposeMatrices(matrices);
+            string? error = null;
+            var success = instance.TestSTSU(autoCorrelcation, defaultSpeed, defaultStopDuration, "C", ref error);
+            Assert.IsTrue(success, error);
+            DisposeMatrices(matrices);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     private static void DisposeMatrices(List<List<VisumMatrix>> matrices)
@@ -196,6 +218,7 @@ public class TestTransitAssignment
         {
             DisposeMatrices(matrix);
         }
+        matrices.Clear();
     }
 
     /// <summary>
@@ -208,5 +231,6 @@ public class TestTransitAssignment
         {
             matrix.Dispose();
         }
+        matrices.Clear();
     }
 }

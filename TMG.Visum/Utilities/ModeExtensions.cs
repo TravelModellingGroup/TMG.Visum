@@ -10,9 +10,9 @@ public static class ModeExtensions
     /// </summary>
     /// <param name="mode">The mode to get the code of.</param>
     /// <returns>The code of the mode.</returns>
-    internal static string GetCode(this IMode mode)
+    internal static string GetCode(object mode)
     {
-        return (string)mode.AttValue["code"];
+        return (string)((dynamic)mode).AttValue["code"];
     }
 
     /// <summary>
@@ -20,9 +20,9 @@ public static class ModeExtensions
     /// </summary>
     /// <param name="mode">The mode to get the name of.</param>
     /// <returns>The name of the mode.</returns>
-    internal static string GetName(this IMode mode)
+    internal static string GetName(object mode)
     {
-        return (string)mode.AttValue["Name"];
+        return (string)((dynamic)mode).AttValue["Name"];
     }
 
 }

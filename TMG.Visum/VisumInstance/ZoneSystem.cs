@@ -13,7 +13,13 @@ public partial class VisumInstance
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
             var zoneContainer = _visum.Net.Zones;
-            return zoneContainer.GetZoneNumbers();
+            int[] ret = new int[(int)zoneContainer.Count];
+            int pos = 0;
+            foreach (dynamic zone in zoneContainer)
+            {
+                ret[pos++] = (int)(double)zone.AttValue["No"];
+            }
+            return ret;
         }
         finally
         {
@@ -32,7 +38,19 @@ public partial class VisumInstance
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
             var zoneContainer = _visum.Net.Zones;
-            return zoneContainer.GetZoneInformation();
+            int count = (int)zoneContainer.Count;
+            int[] zoneNumber = new int[count];
+            float[] x = new float[count];
+            float[] y = new float[count];
+            int pos = 0;
+            foreach (dynamic zone in zoneContainer)
+            {
+                zoneNumber[pos] = (int)(double)zone.AttValue["No"];
+                x[pos] = (float)(double)zone.AttValue["XCoord"];
+                y[pos] = (float)(double)zone.AttValue["YCoord"];
+                pos++;
+            }
+            return (zoneNumber, x, y);
         }
         finally
         {

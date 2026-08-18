@@ -5,10 +5,10 @@
 /// </summary>
 public sealed class VisumTransitSystem : IDisposable
 {
-    private ITSystem _system;
+    private dynamic _system;
     private VisumInstance _instance;
-    
-    internal VisumTransitSystem(ITSystem system, VisumInstance instance)
+
+    internal VisumTransitSystem(dynamic system, VisumInstance instance)
     {
         _system = system;
         _instance = instance;
@@ -43,7 +43,7 @@ public sealed class VisumTransitSystem : IDisposable
     /// <summary>
     /// Internal, get a reference to the wrapped transit system object
     /// </summary>
-    internal ITSystem TSystem => _system;
+    internal dynamic TSystem => _system;
 
     #region IDispose
 

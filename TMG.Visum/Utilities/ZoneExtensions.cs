@@ -8,9 +8,9 @@ internal static class ZoneExtensions
     /// <param name="zone"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ZoneNumber(this IZone zone)
+    public static int ZoneNumber(object zone)
     {
-        return (int)(double)zone.AttValue["No"];
+        return (int)(double)((dynamic)zone).AttValue["No"];
     }
 
     /// <summary>
@@ -19,9 +19,9 @@ internal static class ZoneExtensions
     /// <param name="zone"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double X(this IZone zone)
+    public static double X(object zone)
     {
-        return (double)zone.AttValue["XCoord"];
+        return (double)((dynamic)zone).AttValue["XCoord"];
     }
 
     /// <summary>
@@ -30,9 +30,9 @@ internal static class ZoneExtensions
     /// <param name="zone"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Y(this IZone zone)
+    public static double Y(object zone)
     {
-        return (double)zone.AttValue["YCoord"];
+        return (double)((dynamic)zone).AttValue["YCoord"];
     }
 
 }

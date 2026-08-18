@@ -45,10 +45,11 @@ public sealed class CalculateRoadLoS : IVisumTool
     public void Execute(VisumInstance instance)
     {
         VisumDemandSegment? segment = null;
+        List<VisumMatrix>? matrices = null;
         try
         {
             segment = GetSegment(instance);
-            List<VisumMatrix> matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type).ToList(), SearchCriterion);
+            matrices = instance.CalculateRoadLoS(segment, ToExport.Select(type => type.Type).ToList(), SearchCriterion);
             for (int i = 0; i < matrices.Count; i++)
             {
                 if (!string.IsNullOrWhiteSpace(ToExport[i].MatrixCode))
@@ -59,13 +60,12 @@ public sealed class CalculateRoadLoS : IVisumTool
                 if (!string.IsNullOrWhiteSpace(newName))
                 {
                     // Make sure there is only one matrix with the given name.
-                    if (!ToExport[i].Name.Equals(matrices[i].Name, StringComparison.OrdinalIgnoreCase))
+                    if (!newName.Equals(matrices[i].Name, StringComparison.OrdinalIgnoreCase))
                     {
                         _ = instance.DeleteMatrixByName(newName);
                         matrices[i].Name = newName;
                     }
                 }
-                matrices[i].Dispose();
             }
         }
         catch (VisumException e)
@@ -74,6 +74,13 @@ public sealed class CalculateRoadLoS : IVisumTool
         }
         finally
         {
+            if (matrices is not null)
+            {
+                foreach (var matrix in matrices)
+                {
+                    matrix.Dispose();
+                }
+            }
             segment?.Dispose();
         }
     }

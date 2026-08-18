@@ -359,17 +359,29 @@ public sealed class HeadwayImpedanceParameters : TransitAlgorithmParameters
         return true;
     }
 
-    internal override void ApplyActiveLineFilter(ILineGroupFilter filter)
+    internal override void ApplyActiveLineFilter(object filter)
     {
         if (string.IsNullOrWhiteSpace(HeadwayAttribute) || !UseStoredHeadways)
         {
             return;
         }
-        var timeProfileFilter = filter.TimeProfileFilter();
-        timeProfileFilter.RemoveConditions();
-        timeProfileFilter.AddCondition("OP_NONE", false, HeadwayAttribute, "LESSVAL", 9999.0);
-        timeProfileFilter.UseFilter = true;
 
+        dynamic lineGroupFilter = filter;
+        dynamic? timeProfileFilter = null;
+        try
+        {
+            timeProfileFilter = lineGroupFilter.TimeProfileFilter();
+            timeProfileFilter.RemoveConditions();
+            timeProfileFilter.AddCondition("OP_NONE", false, HeadwayAttribute, "LESSVAL", 9999.0);
+            timeProfileFilter.UseFilter = true;
+        }
+        finally
+        {
+            if (timeProfileFilter is not null)
+            {
+                COM.ReleaseCOMObject(ref timeProfileFilter, false);
+            }
+        }
     }
 
     internal override void UpdateDwellTimes(VisumInstance instance)

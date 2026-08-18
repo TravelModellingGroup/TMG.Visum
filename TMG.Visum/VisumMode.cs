@@ -5,17 +5,17 @@
 /// </summary>
 public class VisumMode : IDisposable
 {
-    private IMode _mode;
+    private dynamic _mode;
 
     private VisumInstance _instance;
 
-    internal VisumMode(IMode mode, VisumInstance instance)
+    internal VisumMode(dynamic mode, VisumInstance instance)
     {
         _mode = mode;
         _instance = instance;
     }
 
-    internal IMode Mode => _mode;
+    internal dynamic Mode => _mode;
 
     /// <summary>
     /// The name of the mode
@@ -51,14 +51,8 @@ public class VisumMode : IDisposable
     {
         if (!disposedValue)
         {
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects)
-                COM.ReleaseCOMObject(ref _mode!, false);
-            }
+            COM.ReleaseCOMObject(ref _mode!, false);
             _instance = null!;
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
             disposedValue = true;
         }
     }

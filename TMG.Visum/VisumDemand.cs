@@ -1,4 +1,6 @@
-﻿namespace TMG.Visum;
+﻿using System.Runtime.InteropServices;
+
+namespace TMG.Visum;
 
 /// <summary>
 /// This class wraps Visum's Demand Segment object
@@ -10,7 +12,7 @@ public sealed class VisumDemandSegment : IDisposable
     /// <summary>
     /// The demand segment that we wrap.
     /// </summary>
-    private IDemandSegment _segment;
+    private dynamic _segment;
 
     /// <summary>
     /// The instance of Visum that the segment belongs to.
@@ -22,7 +24,7 @@ public sealed class VisumDemandSegment : IDisposable
     /// </summary>
     /// <param name="segment">The segment to wrap.</param>
     /// <param name="instance">The Visum instance that the segment belongs to.</param>
-    internal VisumDemandSegment(IDemandSegment segment, VisumInstance instance)
+    internal VisumDemandSegment(dynamic segment, VisumInstance instance)
     {
         _segment = segment;
         _instance = instance;
@@ -31,14 +33,14 @@ public sealed class VisumDemandSegment : IDisposable
     /// <summary>
     /// Internal Only, a reference to the wrapped demand segment.
     /// </summary>
-    internal IDemandSegment Segment => _segment;
+    internal dynamic Segment => _segment;
 
     /// <summary>
     /// The unique code for the demand segment
     /// </summary>
     public string Code
     {
-        get => _segment.GetCode();
+        get => (string)_segment.AttValue["Code"];
     }
 
     /// <summary>
@@ -46,8 +48,8 @@ public sealed class VisumDemandSegment : IDisposable
     /// </summary>
     public string Name
     {
-        get => _segment.GetName();
-        set => _segment.SetName(value);
+        get => (string)_segment.AttValue["Name"];
+        set => _segment.AttValue["Name"] = value;
     }
 
     /// <summary>
@@ -57,12 +59,12 @@ public sealed class VisumDemandSegment : IDisposable
     {
         get
         {
-            if (_instance.Visum is IVisum instance)
+            if (_instance.Visum is not null)
             {
                 try
                 {
-                    var matrix = _segment.get_ODMatrix();
-                    return new VisumMatrix(matrix, ObjectTypeRefT.OBJECTTYPEREF_ZONE, instance);
+                    var matrix = _segment.ODMatrix();
+                    return new VisumMatrix(matrix, ObjectTypeRefT.OBJECTTYPEREF_ZONE, _instance.Visum);
                 }
                 catch
                 {
@@ -73,7 +75,7 @@ public sealed class VisumDemandSegment : IDisposable
         }
         set
         {
-            _segment.set_ODMatrix(value?.Matrix);
+            _segment.ODMatrix = value?.Matrix;
         }
     }
 
@@ -82,8 +84,8 @@ public sealed class VisumDemandSegment : IDisposable
     /// </summary>
     public double OccupancyRate
     {
-        get => _segment.GetOccupancyRate();
-        set => _segment.SetOccupancyRate(value);
+        get => (double)_segment.AttValue["OccupancyRate"];
+        set => _segment.AttValue["OccupancyRate"] = value;
     }
 
     /// <summary>
@@ -143,11 +145,11 @@ public sealed class VisumDemandSegment : IDisposable
         get
         {
             ObjectDisposedException.ThrowIf(_instance.Visum is null, this);
-            return new VisumMode(_segment.GetMode(), _instance);
+            return new VisumMode(_segment.AttValue["Mode"], _instance);
         }
         set
         {
-            _segment.SetMode(value.Mode);
+            _segment.AttValue["Mode"] = value.Mode;
         }
     }
 
@@ -158,10 +160,7 @@ public sealed class VisumDemandSegment : IDisposable
     {
         if (!disposedValue)
         {
-            if (disposing)
-            {
-                COM.ReleaseCOMObject(ref _segment!, false);
-            }
+            COM.ReleaseCOMObject(ref _segment!, false);
             _instance = null!;
             disposedValue = true;
         }

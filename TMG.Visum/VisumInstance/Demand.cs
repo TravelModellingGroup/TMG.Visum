@@ -54,10 +54,10 @@ public partial class VisumInstance
         try
         {
             ObjectDisposedException.ThrowIf(_visum is null, this);
-            IDemandSegment? ret = null;
-            foreach (IDemandSegment segment in _visum.Net.DemandSegments)
+            dynamic? ret = null;
+            foreach (dynamic segment in _visum.Net.DemandSegments)
             {
-                if (segment.GetCode() == code)
+                if (((string)segment.AttValue["Code"]) == code)
                 {
                     ret = segment;
                     break;

@@ -1,12 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
 
-namespace TMG.Visum.Utilities;
+namespace TMG.Visum.Test;
 
-/// <summary>
-/// Provides logic for releasing the memory 
-/// from a COM object which comes from VISUM.
-/// </summary>
-internal static class COM
+internal static class Utilities
 {
     /// <summary>
     /// Shutdown the remote COM object.
@@ -37,7 +36,7 @@ internal static class COM
         Marshal.CleanupUnusedObjectsInCurrentContext();
         while (Marshal.AreComObjectsAvailableForCleanup())
         {
-            
+
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Marshal.CleanupUnusedObjectsInCurrentContext();

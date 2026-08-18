@@ -49,7 +49,7 @@ public partial class VisumInstance
     {
         if (!TryGetAttributeInternal(name, netObjectType, out var at))
         {
-            netObjectType.CreateAttributeInternal(_visum!, name, attributeType);
+            netObjectType.CreateAttributeInternal((object)_visum!, name, attributeType);
         }
         else
         {
@@ -65,14 +65,14 @@ public partial class VisumInstance
     /// <param name="attribute">The attribute if found, null otherwise.</param>
     /// <returns>True if the attribute was found, false otherwise.</returns>
     internal bool TryGetAttributeInternal(string name, NetworkObjectType netObjectType,
-        [NotNullWhen(true)] out IAttribute? attribute)
+        [NotNullWhen(true)] out dynamic? attribute)
     {
-        IAttributes attributes = netObjectType.GetAttributes(_visum!);
+        dynamic attributes = netObjectType.GetAttributes((object)_visum!);
         var allAttributes = (object[])attributes.GetAll;
         for (int i = 0; i < allAttributes.Length; i++)
         {
-            var at = (IAttribute)allAttributes[i];
-            var atName = (string)at.get_Name();
+            dynamic at = allAttributes[i];
+            var atName = (string)at.Name;
             if (atName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
             {
                 attribute = at;

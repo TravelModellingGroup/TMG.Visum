@@ -6,13 +6,27 @@ namespace TMG.Visum.Test
         [TestMethod]
         public void LoadVisumWithoutVersionFile()
         {
-            using var visum = new VisumInstance();
+            var visum = new VisumInstance();
+            try
+            {
+            }
+            finally
+            {
+                visum.Dispose();
+            }
         }
 
         [TestMethod]
         public void LoadVisumWithVersionFile()
         {
-            using var visum = new VisumInstance("BlankTestFile.ver");
+            var visum = new VisumInstance("BlankTestFile.ver");
+            try
+            {
+            }
+            finally
+            {
+                visum.Dispose();
+            }
         }
     }
 }

@@ -18,11 +18,12 @@ public sealed partial class AssignRoadTool : IVisumTool
     public void Execute(VisumInstance instance)
     {
         List<VisumDemandSegment>? segments = null;
+        List<VisumMatrix>? demandMatrices = null;
         try
         {
-            segments = GetDemandSegments(instance);
+            (segments, demandMatrices) = GetDemandSegments(instance);
 
-            RoadAssignmentAlgorithm alg = 
+            RoadAssignmentAlgorithm alg =
                 (RoadAssignmentAlgorithm ?? new LUCEAlgorithm()).GetAlgorithm(segments);
 
             instance.ExecuteRoadAssignment(segments, alg);
@@ -35,17 +36,22 @@ public sealed partial class AssignRoadTool : IVisumTool
         {
             try
             {
-                // Release the variables.
+                if (demandMatrices is not null)
+                {
+                    for (int i = 0; i < demandMatrices.Count; i++)
+                    {
+                        demandMatrices[i]?.Dispose();
+                    }
+                }
                 if (segments is not null)
                 {
                     for (int i = 0; i < segments.Count; i++)
                     {
-                        segments[i]?.DemandMatrix?.Dispose();
                         segments[i].Dispose();
                     }
                 }
             }
-            catch // Kill all errors within the finally
+            catch
             { }
         }
     }
@@ -57,18 +63,20 @@ public sealed partial class AssignRoadTool : IVisumTool
     /// </summary>
     /// <param name="instance">The visum instance to work for.</param>
     /// <returns>A list of VisumDemandSegments to use.</returns>
-    private List<VisumDemandSegment> GetDemandSegments(VisumInstance instance)
+    private (List<VisumDemandSegment> Segments, List<VisumMatrix> DemandMatrices) GetDemandSegments(VisumInstance instance)
     {
-        return DemandSegments
-            .Select(segment =>
-            {
-                var s = instance.GetDemandSegment(segment.Code);
-                var matrix = instance.GetMatrixByName(segment.DemandMatrix);
-                matrix.SetAsDemandMatrix();
-                s.DemandMatrix = matrix;
-                return s;
-            })
-            .ToList();
+        var segments = new List<VisumDemandSegment>(DemandSegments.Length);
+        var matrices = new List<VisumMatrix>(DemandSegments.Length);
+        foreach (var segment in DemandSegments)
+        {
+            var s = instance.GetDemandSegment(segment.Code);
+            var matrix = instance.GetMatrixByName(segment.DemandMatrix);
+            matrix.SetAsDemandMatrix();
+            s.DemandMatrix = matrix;
+            segments.Add(s);
+            matrices.Add(matrix);
+        }
+        return (segments, matrices);
     }
 
 

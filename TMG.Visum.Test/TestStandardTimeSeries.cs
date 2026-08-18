@@ -7,34 +7,62 @@ public class TestStandardTimeSeries
     [TestMethod]
     public void CreateStandardTimeSeries()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var newTimeSeries = instance.CreateStandardTimeSeries("NewTimeSeries", true);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var newTimeSeries = instance.CreateStandardTimeSeries("NewTimeSeries", true);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void GetStandardTimeSeriesByNumber()
     {
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var timeSeries = instance.GetStandardTimeSeries(1);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var timeSeries = instance.GetStandardTimeSeries(1);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void GetStandardTimeSeriesByName()
     {
         const string name = "NewTimeSeries";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
-        using var foundTimeSeries = instance.GetStandardTimeSeries(name);
-        Assert.AreEqual(newTimeSeries.Number, foundTimeSeries.Number);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+            using var foundTimeSeries = instance.GetStandardTimeSeries(name);
+            Assert.AreEqual(newTimeSeries.Number, foundTimeSeries.Number);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void RemoveStandardTimeSeriesByReference()
     {
         const string name = "NewTimeSeries";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
-        instance.RemoveStandardTimeSeries(newTimeSeries);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+            instance.RemoveStandardTimeSeries(newTimeSeries);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
@@ -42,21 +70,35 @@ public class TestStandardTimeSeries
     {
         int number;
         const string name = "NewTimeSeries";
-        using var instance = new VisumInstance("TestNetwork.ver");
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
         {
-            using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
-            number = newTimeSeries.Number;
+            {
+                using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+                number = newTimeSeries.Number;
+            }
+            instance.RemoveStandardTimeSeries(number);
         }
-        instance.RemoveStandardTimeSeries(number);
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
     [TestMethod]
     public void RemoveStandardTimeSeriesByName()
     {
         const string name = "NewTimeSeries";
-        using var instance = new VisumInstance("TestNetwork.ver");
-        using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
-        instance.RemoveStandardTimeSeries(name);
+        var instance = new VisumInstance("TestNetwork.ver");
+        try
+        {
+            using var newTimeSeries = instance.CreateStandardTimeSeries(name, true);
+            instance.RemoveStandardTimeSeries(name);
+        }
+        finally
+        {
+            instance.Dispose();
+        }
     }
 
 }
