@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "XTMF2": {
+      "commandName": "Executable",
+      "executablePath": "..\\XTMF2.GUI.exe"
+    }
+  }
+}
