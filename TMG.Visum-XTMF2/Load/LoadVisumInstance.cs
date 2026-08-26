@@ -3,7 +3,7 @@ namespace TMG.Visum.Load;
 [Module(
     Name = "Load Visum Instance",
     Description = "This module is used for loading a new instance of VISUM",
-    DocumentationLink = "https://tmg.utoronto.ca/doc/2.0/Visum/modules/Import/LoadVisumInstance.html"
+    DocumentationLink = "https://tmg.utoronto.ca/doc/2.0/Visum/modules/Load/LoadVisumInstance.html"
     )]
 public sealed class LoadVisumInstance : BaseFunction<VisumInstance>, IDisposable
 {
