@@ -7,70 +7,70 @@ namespace TMG.Visum.Assign.TransitAssignmentAlgorithm;
     )]
 public sealed class HeadwayAlgorithm : TransitAssignmentAlgorithmModule
 {
-    [Parameter(Name = "Access Time Value", DefaultValue = "1.0", Description = "", Index = 0)]
+    [Parameter(Name = "Access Time Value", DefaultValue = "1.0", Description = "The weight applied to access time when computing the perceived journey time.", Index = 0)]
     public IFunction<float> AccessTimeVal = null!;
 
-    [Parameter(Name = "Boarding Penalty PuT Attribute", DefaultValue = "", Description = "", Index = 1)]
+    [Parameter(Name = "Boarding Penalty PuT Attribute", DefaultValue = "", Description = "The name of the attribute holding the boarding penalty to apply to public transit boardings.", Index = 1)]
     public IFunction<string> BoardingPenaltyPuTAttribute = null!;
 
-    [Parameter(Name = "Boarding Penalty PuT Aux Attribute", DefaultValue = "", Description = "", Index = 2)]
+    [Parameter(Name = "Boarding Penalty PuT Aux Attribute", DefaultValue = "", Description = "The name of the attribute holding the boarding penalty to apply to public transit auxiliary (walk) connections.", Index = 2)]
     public IFunction<string> BoardingPenaltyPuTAuxAttribute = null!;
 
-    [Parameter(Name = "Egress Time Value", DefaultValue = "1.0", Description = "", Index = 3)]
+    [Parameter(Name = "Egress Time Value", DefaultValue = "1.0", Description = "The weight applied to egress time when computing the perceived journey time.", Index = 3)]
     public IFunction<float> EgressTimeVal = null!;
 
-    [Parameter(Name = "Fare Point Value", DefaultValue = "0.0", Description = "", Index = 4)]
+    [Parameter(Name = "Fare Point Value", DefaultValue = "0.0", Description = "The weight applied to each fare point when computing the perceived journey time.", Index = 4)]
     public IFunction<float> FarePointVal = null!;
 
-    [Parameter(Name = "In Vehicle Time Value", DefaultValue = "1.0", Description = "", Index = 5)]
+    [Parameter(Name = "In Vehicle Time Value", DefaultValue = "1.0", Description = "The weight applied to in-vehicle time when computing the perceived journey time.", Index = 5)]
     public IFunction<float> InVehicleTimeVal = null!;
 
-    [Parameter(Name = "In Vehicle Time Weight Attribute", DefaultValue = "", Description = "", Index = 6)]
+    [Parameter(Name = "In Vehicle Time Weight Attribute", DefaultValue = "", Description = "The name of the attribute providing a per-object multiplier applied to in-vehicle time. Leave blank to apply no additional weighting.", Index = 6)]
     public IFunction<string> InVehicleTimeWeightAttribute = null!;
 
-    [Parameter(Name = "Mean Delay Attribute", DefaultValue = "", Description = "", Index = 7)]
+    [Parameter(Name = "Mean Delay Attribute", DefaultValue = "", Description = "The name of the attribute providing the mean delay to apply when boarding. Leave blank to apply no delay.", Index = 7)]
     public IFunction<string> MeanDelayAttribute = null!;
 
-    [Parameter(Name = "Number Of Transfers Value", DefaultValue = "0.0", Description = "", Index = 8)]
+    [Parameter(Name = "Number Of Transfers Value", DefaultValue = "0.0", Description = "The penalty, in perceived seconds, applied for each transfer taken.", Index = 8)]
     public IFunction<float> NumberOfTransfersValue = null!;
 
-    [Parameter(Name = "Origin Wait Time Value", DefaultValue = "1.0", Description = "", Index = 9)]
+    [Parameter(Name = "Origin Wait Time Value", DefaultValue = "1.0", Description = "The weight applied to the initial wait time at the origin stop.", Index = 9)]
     public IFunction<float> OriginWaitTimeValue = null!;
 
-    [Parameter(Name = "Perceived Journey Time Value", DefaultValue = "1.0", Description = "", Index = 10)]
+    [Parameter(Name = "Perceived Journey Time Value", DefaultValue = "1.0", Description = "The weight applied to the overall perceived journey time.", Index = 10)]
     public IFunction<float> PerceivedJourneyTimeValue = null!;
 
-    [Parameter(Name = "Public Transit Auxiliary Time Value", DefaultValue = "1.0", Description = "", Index = 11)]
+    [Parameter(Name = "Public Transit Auxiliary Time Value", DefaultValue = "1.0", Description = "The weight applied to time spent on public transit auxiliary (walk) connections.", Index = 11)]
     public IFunction<float> PublicTransitAuxiliaryTimeValue = null!;
 
-    [Parameter(Name = "Transfer Wait Time Value", DefaultValue = "1.0", Description = "", Index = 12)]
+    [Parameter(Name = "Transfer Wait Time Value", DefaultValue = "1.0", Description = "The weight applied to time spent waiting at a transfer.", Index = 12)]
     public IFunction<float> TransferWaitTimeValue = null!;
 
-    [Parameter(Name = "Transfer Wait Time Weight Attribute", DefaultValue = "", Description = "", Index = 13)]
+    [Parameter(Name = "Transfer Wait Time Weight Attribute", DefaultValue = "", Description = "The name of the attribute providing a per-object multiplier applied to transfer wait time. Leave blank to apply no additional weighting.", Index = 13)]
     public IFunction<string> TransferWaitTimeWeightAttribute = null!;
 
-    [Parameter(Name = "Use Fare Model", DefaultValue = "true", Description = "", Index = 14)]
+    [Parameter(Name = "Use Fare Model", DefaultValue = "true", Description = "Should the fare model be included when computing impedance?", Index = 14)]
     public IFunction<bool> UseFareModel = null!;
 
-    [Parameter(Name = "Walk Time Value", DefaultValue = "1.0", Description = "", Index = 15)]
+    [Parameter(Name = "Walk Time Value", DefaultValue = "1.0", Description = "The weight applied to walk time when computing the perceived journey time.", Index = 15)]
     public IFunction<float> WalkTimeValue = null!;
 
-    [Parameter(Name = "Assignment Start Day Index", DefaultValue = "1", Description = "", Index = 16)]
+    [Parameter(Name = "Assignment Start Day Index", DefaultValue = "1", Description = "The index of the day that the assignment's time interval starts on.", Index = 16)]
     public IFunction<int> AssignmentStartDayIndex = null!;
 
-    [Parameter(Name = "Assignment Start Time", DefaultValue = "00:00:00", Description = "", Index = 17)]
+    [Parameter(Name = "Assignment Start Time", DefaultValue = "00:00:00", Description = "The time of day that the assignment's time interval starts at.", Index = 17)]
     public IFunction<TimeOnly> AssignmentStartTime = null!;
 
-    [Parameter(Name = "Assignment End Day Index", DefaultValue = "2", Description = "", Index = 18)]
+    [Parameter(Name = "Assignment End Day Index", DefaultValue = "2", Description = "The index of the day that the assignment's time interval ends on.", Index = 18)]
     public IFunction<int> AssignmentEndDayIndex = null!;
 
-    [Parameter(Name = "Assignment End Time", DefaultValue = "00:00:00", Description = "", Index = 19)]
+    [Parameter(Name = "Assignment End Time", DefaultValue = "00:00:00", Description = "The time of day that the assignment's time interval ends at.", Index = 19)]
     public IFunction<TimeOnly> AssignmentEndTime = null!;
 
-    [Parameter(Name = "Share Lower Bounds", DefaultValue = "0.05", Description = "", Index = 20)]
+    [Parameter(Name = "Share Lower Bounds", DefaultValue = "0.05", Description = "The minimum share of demand a connection must attract before it is discarded.", Index = 20)]
     public IFunction<float> ShareLowerBounds = null!;
 
-    [Parameter(Name = "Share Upper Bounds", DefaultValue = "0.99", Description = "", Index = 21)]
+    [Parameter(Name = "Share Upper Bounds", DefaultValue = "0.99", Description = "The cumulative share of demand to cover before no further connections are considered.", Index = 21)]
     public IFunction<float> ShareUpperBounds = null!;
 
     [Parameter(Name = "Use Stored Headways", DefaultValue = "false", Description = "Use the headways stored in the HeadwayAttribute instead of computing it.", Index = 22)]
