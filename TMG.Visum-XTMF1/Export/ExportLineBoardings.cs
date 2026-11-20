@@ -1,4 +1,6 @@
-﻿namespace TMG.Visum.Export;
+﻿using System.Text;
+
+namespace TMG.Visum.Export;
 
 [ModuleInformation(Description = "")]
 public sealed class ExportLineBoardings : IVisumTool
@@ -20,9 +22,14 @@ public sealed class ExportLineBoardings : IVisumTool
         }
         using var writer = new StreamWriter(SaveTo);
         writer.WriteLine("LineName,Boardings");
+        StringBuilder build = new();
         foreach(var boarding in boardings)
         {
-            writer.Write(boarding.lineName);
+            build.Clear();
+            build.Append('"');
+            build.Append(boarding.lineName);
+            build.Append('"');
+            writer.Write(build);
             writer.Write(',');
             writer.WriteLine(boarding.boardings);
         }

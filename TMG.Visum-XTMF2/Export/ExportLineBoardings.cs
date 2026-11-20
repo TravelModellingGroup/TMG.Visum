@@ -24,9 +24,14 @@ public sealed class ExportLineBoardings : BaseAction<VisumInstance>
         var savePath = Path.GetFullPath(SaveTo.Invoke());
         using var writer = new StreamWriter(savePath);
         writer.WriteLine("LineName,Boardings");
+        StringBuilder build = new();
         foreach (var boarding in boardings)
         {
-            writer.Write(boarding.lineName);
+            build.Clear();
+            build.Append('"');
+            build.Append(boarding.lineName);
+            build.Append('"');
+            writer.Write(build);
             writer.Write(',');
             writer.WriteLine(boarding.boardings);
         }
